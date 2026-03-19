@@ -1,4 +1,4 @@
-import { Card } from "./Card";
+import { Card, CardContent, CardFooter } from "./Card";
 
 export const SafeToSpendCard = ({
   title = "Safe to Spend Today",
@@ -7,17 +7,17 @@ export const SafeToSpendCard = ({
   onAction,
 }) => {
   return (
-    <Card className="safe-to-spend">
-      <div className="card__content">
-        <div className="safe-title">{title}</div>
-        <div className="safe-amount">{amount}</div>
-      </div>
+    <Card className="safe">
+      <CardContent className="stack-5">
+        <div className="card-title big-title">{title}</div>
+        <div className="card-value big-value">{amount}</div>
+      </CardContent>
 
-      <div className="card__footer card__footer--safe">
-        <button className="safe-action" type="button" onClick={onAction}>
+      <CardFooter className="card-footer--safe">
+        <button className="card-link" type="button" onClick={onAction}>
           {actionText}
         </button>
-      </div>
+      </CardFooter>
     </Card>
   );
 };

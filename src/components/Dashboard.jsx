@@ -1,9 +1,10 @@
 import { Sidebar } from "./Sidebar";
-import { Card } from "./Card";
+import { Card, CardHeader, CardContent, CardFooter } from "./Card";
 import { BarChartMock } from "./BarChartMock";
 import { SavingsPanel } from "./SavingsPanel";
 import { SafeToSpendCard } from "./SafeToSpendCard";
 import { MetricCard } from "./MetricCard";
+import { TrendArrow } from "./TrendArrow";
 
 import "../styles/style.css";
 
@@ -38,6 +39,21 @@ const savingsPanels = [
   },
 ];
 
+const trendBars = [
+  { height: 42, className: "bar--lilac" },
+  { height: 90, className: "bar--indigo" },
+  { height: 60, className: "bar--accent" },
+  { height: 117, className: "bar--deep" },
+  { height: 93, className: "bar--indigo" },
+  { height: 46, className: "bar--lilac" },
+  { height: 73, className: "bar--accent" },
+  { height: 113, className: "bar--deep" },
+  { height: 86, className: "bar--indigo" },
+  { height: 102, className: "bar--deep" },
+  { height: 61, className: "bar--accent" },
+  { height: 80, className: "bar--indigo" },
+];
+
 export const Dashboard = () => {
   return (
     <div className="dashboard">
@@ -46,15 +62,13 @@ export const Dashboard = () => {
           <Sidebar />
 
           <main className="content">
-            {/* OVERVIEW */}
-            <header className="overview">
+            <header className="overview stack-5 card card-soft card-overview">
               <h1 className="overview-title">Overview</h1>
               <p className="overview-subtitle">
                 Here is summary of your finances
               </p>
             </header>
 
-            {/* TOP ROW */}
             <section className="grid-top">
               <SafeToSpendCard
                 title="Safe to Spend Today"
@@ -64,140 +78,163 @@ export const Dashboard = () => {
               />
 
               <MetricCard
+                className="card--sm metric-accent"
                 title="Current Balance"
                 value="£1230"
-                footer={<div className="chip">+20.45%</div>}
+                footer={
+                  <div className="chip chip-positive">
+                    <span>+15%</span>
+                    <TrendArrow direction="up" />
+                  </div>
+                }
               />
             </section>
 
-            {/* MIDDLE ROW */}
             <section className="grid-middle">
-              <Card className="transactions">
-                <div className="card__content">
-                  <div className="card-head">
-                    <div className="card-title">Recent Transactions</div>
-                    <button className="btn-mini chip" type="button">
+              <Card className="transactions card--xl card-soft">
+                <CardHeader
+                  title="Recent Transactions"
+                  action={
+                    <button className="btn-mini chip chip-seeall" type="button">
                       See all
                     </button>
-                  </div>
+                  }
+                />
 
-                  <div className="card__section">
-                    <ul className="list">
-                      {transactions.map((t) => (
-                        <li className="row" key={`${t.name}-${t.amount}`}>
-                          <span className="dot" />
-                          <span className="row-title">{t.name}</span>
-                          <span className="row-amount">{t.amount}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                <CardContent className="card-content--section">
+                  <ul className="list">
+                    {transactions.map((t) => (
+                      <li className="row" key={`${t.name}-${t.amount}`}>
+                        <span className="dot" />
+                        <span className="row-title">{t.name}</span>
+                        <span className="row-amount">{t.amount}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
 
-                <div className="card__footer card__footer--tight" />
+                <CardFooter className="card-footer--tight" />
               </Card>
 
-              {/* Savings */}
-              <Card className="savings">
-                <div className="card__content">
-                  <div className="card-head">
-                    <div>
-                      <div className="card-title">Savings</div>
+              <Card className="savings card--xl card-soft">
+                <CardHeader
+                  action={
+                    <button className="btn-mini chip chip-seeall" type="button">
+                      See all
+                    </button>
+                  }
+                >
+                  <div className="stack-8">
+                    <div className="card-title">Savings</div>
+
+                    <div className="stack-5">
                       <div className="card-muted">Total Savings</div>
                       <div className="card-value">£800</div>
                     </div>
+                  </div>
 
-                    <button className="btn-mini chip" type="button">
+                  <div className="card-header__action">
+                    <button className="btn-mini chip chip-seeall" type="button">
                       See all
                     </button>
                   </div>
+                </CardHeader>
 
+                <CardContent className="card-content--sectionless">
                   <div className="subcards">
                     {savingsPanels.map((p) => (
                       <SavingsPanel key={p.title} {...p} />
                     ))}
                   </div>
-                </div>
+                </CardContent>
 
-                <div className="card__footer card__footer--tight" />
+                <CardFooter className="card-footer--tight" />
               </Card>
 
-              {/* Right column */}
               <div className="right-col">
                 <div className="right-metrics">
                   <MetricCard
+                    className="card--sm card-soft"
                     title="Total Income"
                     value="£5230"
-                    footer={<div className="chip">+30%</div>}
+                    footer={
+                      <div className="chip chip-negative">
+                        <span>-15%</span>
+                        <TrendArrow direction="down" />
+                      </div>
+                    }
                   />
 
                   <MetricCard
+                    className="card--sm card-soft"
                     title="Total Expense"
                     value="£4280"
-                    footer={<div className="chip">+15%</div>}
+                    footer={
+                      <div className="chip chip-positive">
+                        <span>+15%</span>
+                        <TrendArrow direction="up" />
+                      </div>
+                    }
                   />
                 </div>
 
-                {/* Scheduled Payments */}
-                <Card className="scheduled">
-                  <div className="card__content">
-                    <div className="card-head">
-                      <div className="card-title">Scheduled Payments</div>
-                      <button className="btn-mini chip" type="button">
+                <Card className="scheduled card--md card-soft">
+                  <CardHeader
+                    title="Scheduled Payments"
+                    action={
+                      <button className="btn-mini chip chip-seeall" type="button">
                         See all
                       </button>
-                    </div>
+                    }
+                  />
 
-                    <div className="card__section">
-                      <ul className="list">
-                        {scheduledPayments.map((p) => (
-                          <li className="row" key={`${p.name}-${p.amount}`}>
-                            <span className="dot" />
-                            <span className="row-title">{p.name}</span>
-                            <span className="row-amount">{p.amount}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
+                  <CardContent className="card-content--section">
+                    <ul className="list">
+                      {scheduledPayments.map((p) => (
+                        <li className="row" key={`${p.name}-${p.amount}`}>
+                          <span className="dot" />
+                          <span className="row-title">{p.name}</span>
+                          <span className="row-amount">{p.amount}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
 
-                  <div className="card__footer card__footer--tight" />
+                  <CardFooter className="card-footer--tight" />
                 </Card>
               </div>
             </section>
 
-            {/* BOTTOM ROW */}
             <section className="grid-bottom">
-              {/* Earning Trends */}
-              <Card className="trends">
-                <div className="card__content">
-                  <div className="card-title">Earning Trends</div>
-                  <div className="card-muted">
-                    Here is summary of your finances
+              <Card className="trends card--lg card-soft">
+                <CardHeader
+                  className="card-header--stack"
+                  title="Earning Trends"
+                  subtitle="Here is summary of your finances"
+                />
+
+                <CardContent className="card-content--chart">
+                  <div className="chart-layout">
+                    <div className="chart-ylabels">
+                      <span>£200</span>
+                      <span>£100</span>
+                      <span>£50</span>
+                      <span>£10</span>
+                    </div>
+
+                    <BarChartMock bars={trendBars} />
                   </div>
+                </CardContent>
 
-                  <BarChartMock
-                    bars={[46, 90, 60, 117, 93, 46, 73, 113, 86, 102, 61, 80]}
-                  />
-
-                  <div className="ylabels">
-                    <span>£200</span>
-                    <span>£100</span>
-                    <span>£50</span>
-                    <span>£10</span>
-                  </div>
-                </div>
-
-                <div className="card__footer card__footer--tight" />
+                <CardFooter className="card-footer--tight" />
               </Card>
 
-              {/* Budget Pace */}
-              <Card className="pace">
-                <div className="card__content">
-                  <div className="card-title">Budget Pace</div>
+              <Card className="pace card--lg card-soft">
+                <CardHeader title="Budget Pace" />
 
+                <CardContent className="card-content--pace">
                   <div className="pace-pill">
-                    <span className="dot tiny" />
+                    <span className="dot tiny dot-warning" />
                     <span>Slightly over pace</span>
                   </div>
 
@@ -206,9 +243,9 @@ export const Dashboard = () => {
                     You should have spent ≤ £1,420 by today
                   </p>
                   <p className="pace-strong">You have spent £1,560</p>
-                </div>
+                </CardContent>
 
-                <div className="card__footer card__footer--tight" />
+                <CardFooter className="card-footer--tight" />
               </Card>
             </section>
           </main>

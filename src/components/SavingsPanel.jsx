@@ -9,17 +9,14 @@ export const SavingsPanel = ({
 }) => {
   return (
     <div className="subcard">
-      {/* HEADER */}
       <div className="subcard__header">
         <div className="subcard__title">{title}</div>
       </div>
 
-      {/* CONTENT */}
       <div className="subcard__content">
         <ProgressBar value={progressValue} />
       </div>
 
-      {/* FOOTER */}
       <div className="subcard__footer">
         <div className="subcard__footer-left">
           <span className="subcard__amount">{leftAmount}</span>
