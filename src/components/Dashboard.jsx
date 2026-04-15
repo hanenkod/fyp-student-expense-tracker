@@ -54,7 +54,83 @@ const trendBars = [
   { height: 80, className: "bar--indigo" },
 ];
 
+const getStoredJSON = (key) => {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : {};
+  } catch {
+    return {};
+  }
+};
+
+const formatCurrency = (value) => {
+  return `£${Number(value || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const formatCurrencyFixed = (value) => {
+  return `£${Number(value || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const formatPercent = (value) => {
+  return `${Math.round(value)}%`;
+};
+
+const getMonthMeta = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const dayOfMonth = today.getDate();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const remainingDays = daysInMonth - dayOfMonth + 1;
+
+  return {
+    dayOfMonth,
+    daysInMonth,
+    remainingDays,
+  };
+};
+
 export const Dashboard = () => {
+  const onboardingData = getStoredJSON("pockeOnboarding");
+  const userData = getStoredJSON("pockeUser");
+
+  const income = Number(onboardingData.income || 0);
+  const expenses = Number(onboardingData.expenses || 0);
+
+  const { remainingDays } = getMonthMeta();
+
+  const remainingBudget = Math.max(income - expenses, 0);
+  const safeToSpend = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+
+  const remainingPercent = income > 0 ? (remainingBudget / income) * 100 : 0;
+  const incomeCoveragePercent =
+    expenses > 0 ? (income / expenses) * 100 : income > 0 ? 100 : 0;
+  const expensePercent = income > 0 ? (expenses / income) * 100 : 0;
+
+  const incomeCoveragePositive = income >= expenses;
+  const expensePositive = expenses <= income;
+  const balancePositive = remainingBudget > 0;
+
+  let paceStatus = "warning";
+  let paceText = "Moderate plan";
+
+  if (expensePercent <= 50) {
+    paceStatus = "positive";
+    paceText = "Healthy plan";
+  } else if (expensePercent <= 80) {
+    paceStatus = "warning";
+    paceText = "Moderate plan";
+  } else {
+    paceStatus = "danger";
+    paceText = "Heavy plan";
+  }
+
   return (
     <div className="dashboard">
       <div className="app-shell">
@@ -62,29 +138,46 @@ export const Dashboard = () => {
           <Sidebar />
 
           <main className="content">
-            <header className="overview stack-5 card card-soft card-overview">
-              <h1 className="overview-title">Overview</h1>
-              <p className="overview-subtitle">
-                Here is summary of your finances
-              </p>
+            <header className="overview card card-soft card-overview">
+              <div className="overview-bar">
+                <div className="overview-text stack-5">
+                  <h1 className="overview-title">Overview</h1>
+                  <p className="overview-subtitle">
+                    Here is summary of your finances
+                    {userData.name ? `, ${userData.name}` : ""}
+                  </p>
+                </div>
+              </div>
             </header>
 
             <section className="grid-top">
               <SafeToSpendCard
                 title="Safe to Spend Today"
-                amount="£30"
+                amount={formatCurrencyFixed(safeToSpend)}
                 actionText="How it’s calculated?"
-                onAction={() => console.log("How it's calculated")}
+                onAction={() =>
+                  console.log("Safe to Spend:", {
+                    income,
+                    expenses,
+                    remainingBudget,
+                    remainingDays,
+                    safeToSpend,
+                  })
+                }
               />
 
               <MetricCard
                 className="card--sm metric-accent"
                 title="Current Balance"
-                value="£1230"
+                value={formatCurrency(remainingBudget)}
                 footer={
-                  <div className="chip chip-positive">
-                    <span>+15%</span>
-                    <TrendArrow direction="up" />
+                  <div
+                    className={`chip ${
+                      balancePositive ? "chip-positive" : "chip-negative"
+                    }`}
+                  >
+                    <span>{formatPercent(remainingPercent)} left</span>
+                    <TrendArrow direction={balancePositive ? "up" : "down"} />
                   </div>
                 }
               />
@@ -117,13 +210,7 @@ export const Dashboard = () => {
               </Card>
 
               <Card className="savings card--xl card-soft">
-                <CardHeader
-                  action={
-                    <button className="btn-mini chip chip-seeall" type="button">
-                      See all
-                    </button>
-                  }
-                >
+                <CardHeader>
                   <div className="stack-8">
                     <div className="card-title">Savings</div>
 
@@ -156,11 +243,19 @@ export const Dashboard = () => {
                   <MetricCard
                     className="card--sm card-soft"
                     title="Total Income"
-                    value="£5230"
+                    value={formatCurrency(income)}
                     footer={
-                      <div className="chip chip-negative">
-                        <span>-15%</span>
-                        <TrendArrow direction="down" />
+                      <div
+                        className={`chip ${
+                          incomeCoveragePositive
+                            ? "chip-positive"
+                            : "chip-negative"
+                        }`}
+                      >
+                        <span>{formatPercent(incomeCoveragePercent)} cover</span>
+                        <TrendArrow
+                          direction={incomeCoveragePositive ? "up" : "down"}
+                        />
                       </div>
                     }
                   />
@@ -168,11 +263,15 @@ export const Dashboard = () => {
                   <MetricCard
                     className="card--sm card-soft"
                     title="Total Expense"
-                    value="£4280"
+                    value={formatCurrency(expenses)}
                     footer={
-                      <div className="chip chip-positive">
-                        <span>+15%</span>
-                        <TrendArrow direction="up" />
+                      <div
+                        className={`chip ${
+                          expensePositive ? "chip-positive" : "chip-negative"
+                        }`}
+                      >
+                        <span>{formatPercent(expensePercent)} of income</span>
+                        <TrendArrow direction={expensePositive ? "up" : "down"} />
                       </div>
                     }
                   />
@@ -230,19 +329,21 @@ export const Dashboard = () => {
               </Card>
 
               <Card className="pace card--lg card-soft">
-                <CardHeader title="Budget Pace" />
+                <CardHeader title="Monthly Expense Plan" />
 
                 <CardContent className="card-content--pace">
-                  <div className="pace-pill">
-                    <span className="dot tiny dot-warning" />
-                    <span>Slightly over pace</span>
+                  <div className={`pace-pill pace-pill--${paceStatus}`}>
+                    <span className={`dot tiny dot-${paceStatus}`} />
+                    <span>{paceText}</span>
                   </div>
 
-                  <p className="pace-muted">Are you on track this month?</p>
+                  <p className="pace-muted">How healthy is your monthly plan?</p>
                   <p className="pace-strong">
-                    You should have spent ≤ £1,420 by today
+                    Planned monthly expenses: {formatCurrencyFixed(expenses)}
                   </p>
-                  <p className="pace-strong">You have spent £1,560</p>
+                  <p className="pace-strong">
+                    This equals {formatPercent(expensePercent)} of your income
+                  </p>
                 </CardContent>
 
                 <CardFooter className="card-footer--tight" />
@@ -253,4 +354,4 @@ export const Dashboard = () => {
       </div>
     </div>
   );
-};
+}; 

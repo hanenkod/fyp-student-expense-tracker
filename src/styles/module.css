@@ -1,0 +1,129 @@
+.onboardingModule {
+  width: 100%;
+  max-width: 328px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.onboardingModule--animated {
+  animation: onboardingFadeSlide 0.28s ease;
+}
+
+@keyframes onboardingFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboardingModule__title {
+  margin: 0;
+  color: #111111;
+  font-family: "Inter", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.onboardingModule__description {
+  margin: 14px 0 0;
+  color: #918d8d;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.onboardingModule__field {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.onboardingModule__label {
+  color: #111111;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.onboardingModule__input {
+  width: 100%;
+  height: 45px;
+  border: 1px solid #8d8989;
+  border-radius: 12px;
+  background-color: #dddddd;
+  padding: 0 16px;
+  box-sizing: border-box;
+  color: #111111;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.onboardingModule__input::placeholder {
+  color: #918d8d;
+}
+
+.onboardingModule__input:focus {
+  border-color: #907ad6;
+  background-color: #ffffff;
+}
+
+.onboardingModule__button {
+  width: 100%;
+  height: 45px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 12px;
+  background-color: #907ad6;
+  color: #ffffff;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.onboardingModule__button:hover:not(:disabled) {
+  background-color: #7d68c0;
+}
+
+.onboardingModule__button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.onboardingModule__button:disabled {
+  background-color: #c5bbe9;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.onboardingModule__step {
+  margin-top: 32px;
+  color: #9a9494;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .onboardingModule {
+    max-width: 100%;
+    padding: 32px 0 24px;
+  }
+}

@@ -1,3 +1,5 @@
+import { NavLink } from "react-router-dom";
+
 import homeIcon from "../assets/icons/material-symbols_home-rounded.svg";
 import cardIcon from "../assets/icons/solar_card-bold.svg";
 import graphIcon from "../assets/icons/solar_graph-bold.svg";
@@ -10,14 +12,27 @@ export const Sidebar = () => {
       <div className="brand">POCKE</div>
 
       <nav className="nav">
-        <img src={homeIcon} alt="Home" className="nav-icon" />
-        <img src={cardIcon} alt="Cards" className="nav-icon" />
-        <img src={graphIcon} alt="Analytics" className="nav-icon" />
-        <img src={settingsIcon} alt="Settings" className="nav-icon" />
+        <NavLink to="/dashboard" className="nav-item">
+          <img src={homeIcon} alt="Home" />
+        </NavLink>
+
+        <NavLink to="/cards" className="nav-item">
+          <img src={cardIcon} alt="Cards" />
+        </NavLink>
+
+        <NavLink to="/analytics" className="nav-item">
+          <img src={graphIcon} alt="Analytics" />
+        </NavLink>
+
+        <NavLink to="/settings" className="nav-item">
+          <img src={settingsIcon} alt="Settings" />
+        </NavLink>
       </nav>
 
       <div className="sidebar-bottom">
-        <img src={profileIcon} alt="Profile" className="nav-icon" />
+        <NavLink to="/profile" className="nav-item">
+          <img src={profileIcon} alt="Profile" />
+        </NavLink>
       </div>
     </aside>
   );

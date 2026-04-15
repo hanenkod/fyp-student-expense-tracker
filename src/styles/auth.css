@@ -1,0 +1,427 @@
+:root {
+  --color-bg-page: #ffffff;
+  --color-bg-shell: #2c2a4a;
+  --color-bg-panel: #fbfbfb;
+  --color-input-bg: #dddddd;
+  --color-text-dark: #111111;
+  --color-text-light: #ffffff;
+  --color-text-muted: #918d8d;
+  --color-border: #8d8989;
+  --color-primary: #907ad6;
+  --color-primary-hover: #7d68c0;
+  --color-error: #d64545;
+
+  --radius-shell: 32px;
+  --radius-panel: 24px;
+  --radius-control: 12px;
+
+  --control-height: 45px;
+  --content-width: 328px;
+
+  --font-brand: "Dela Gothic One", sans-serif;
+  --font-main: "Inter", sans-serif;
+}
+
+.page-shell {
+  min-height: 100vh;
+  background-color: var(--color-bg-page);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 1360px;
+  min-height: calc(100vh - 48px);
+  margin: 0 auto;
+  display: flex;
+  background-color: var(--color-bg-shell);
+  border-radius: var(--radius-shell);
+  overflow: hidden;
+}
+
+.app-panel {
+  background-color: var(--color-bg-panel);
+  border-radius: var(--radius-panel);
+}
+
+.app-button {
+  border: none;
+  border-radius: var(--radius-control);
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  font-family: var(--font-main);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.app-button:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.app-button:active {
+  transform: translateY(1px);
+}
+
+.registration {
+  background-color: var(--color-bg-page);
+}
+
+.registration__shell {
+  align-items: stretch;
+}
+
+.registration__sidebar {
+  width: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(144, 122, 214, 0.1) 0%, rgba(144, 122, 214, 0) 36%),
+    radial-gradient(circle at 78% 35%, rgba(95, 130, 255, 0.08) 0%, rgba(95, 130, 255, 0) 32%),
+    var(--color-bg-shell);
+  padding: 40px 32px;
+  box-sizing: border-box;
+  display: flex;
+}
+
+.registration__sidebarContent {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.registration__artwork {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 540px;
+  padding: 20px 20px 0;
+}
+
+.registration__artworkGlow {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(130, 154, 255, 0.16) 0%,
+    rgba(144, 122, 214, 0.12) 28%,
+    rgba(144, 122, 214, 0.04) 52%,
+    rgba(144, 122, 214, 0) 74%
+  );
+  filter: blur(20px);
+}
+
+.registration__image {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 500px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  transform: translateY(-8px);
+  filter: drop-shadow(0 24px 42px rgba(5, 8, 25, 0.22));
+  z-index: 1;
+}
+
+.registration__brandBlock {
+  padding-left: 10px;
+  padding-top: 12px;
+}
+
+.registration__logo {
+  margin: 0;
+  font-family: var(--font-brand);
+  line-height: 1;
+}
+
+.registration__logo--light {
+  color: var(--color-text-light);
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.registration__logo--dark {
+  color: var(--color-text-dark);
+  font-size: 22px;
+  text-align: center;
+  margin-bottom: 104px;
+}
+
+.registration__tagline {
+  margin: 0;
+  color: var(--color-text-light);
+  font-family: var(--font-brand);
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.registration__content {
+  width: 50%;
+  margin: 12px 12px 12px 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.registration__contentInner {
+  width: 100%;
+  max-width: var(--content-width);
+  padding: 40px 0 32px;
+}
+
+.registration__header {
+  margin-bottom: 28px;
+}
+
+.registration__title {
+  margin: 0;
+  color: var(--color-text-dark);
+  font-family: var(--font-main);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.registration__socials {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.registration__socialButton {
+  width: 100%;
+  height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 600;
+  color: #000000;
+  transition: background-color 0.2s ease;
+}
+
+.registration__socialButton:hover {
+  background-color: #f4f4f4;
+}
+
+.registration__socialIcon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.registration__divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.registration__dividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: #d5d5d5;
+}
+
+.registration__dividerText {
+  color: var(--color-text-dark);
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.registration__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.registration__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.registration__label {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-dark);
+}
+
+.registration__input {
+  width: 100%;
+  height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background-color: var(--color-input-bg);
+  padding: 0 16px;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+  font-size: 14px;
+  color: var(--color-text-dark);
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.registration__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.registration__input:focus {
+  border-color: var(--color-primary);
+  background-color: #ffffff;
+}
+
+.registration__passwordWrapper {
+  position: relative;
+}
+
+.registration__input--password {
+  padding-right: 72px;
+}
+
+.registration__passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.registration__passwordToggle:hover {
+  opacity: 0.8;
+}
+
+.registration__error {
+  margin: 0;
+  font-family: var(--font-main);
+  font-size: 12px;
+  color: var(--color-error);
+  padding-left: 4px;
+}
+
+.registration__submit {
+  width: 100%;
+  height: var(--control-height);
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+.registration__footer {
+  margin-top: 18px;
+  text-align: center;
+  font-family: var(--font-main);
+  font-size: 14px;
+}
+
+.registration__footerText {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.registration__footerLink {
+  color: var(--color-text-dark);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.registration__footerLink:hover {
+  text-decoration: underline;
+}
+
+.authScreen--animated {
+  animation: authScreenEnter 0.3s ease;
+}
+
+@keyframes authScreenEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .registration__sidebar,
+  .registration__content {
+    width: 100%;
+  }
+
+  .registration__content {
+    margin: 0;
+    border-radius: var(--radius-panel);
+  }
+
+  .registration__logo--dark {
+    margin-bottom: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-shell {
+    padding: 12px;
+  }
+
+  .registration__sidebar {
+    padding: 24px 20px;
+  }
+
+  .registration__artwork {
+    min-height: 340px;
+    padding: 8px 0 0;
+  }
+
+  .registration__artworkGlow {
+    width: 260px;
+    height: 260px;
+  }
+
+  .registration__image {
+    width: 90%;
+    max-height: 320px;
+    transform: none;
+  }
+
+  .registration__tagline {
+    font-size: 22px;
+  }
+
+  .registration__logo--light {
+    font-size: 36px;
+  }
+
+  .registration__contentInner {
+    max-width: 100%;
+    padding: 32px 20px;
+    box-sizing: border-box;
+  }
+}
