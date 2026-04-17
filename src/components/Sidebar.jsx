@@ -20,8 +20,8 @@ export const Sidebar = () => {
           <img src={cardIcon} alt="Transactions" />
         </NavLink>
 
-        <NavLink to="/analytics" className="nav-item">
-          <img src={graphIcon} alt="Analytics" />
+        <NavLink to="/whatif" className="nav-item" title="What-If Planner">
+          <img src={graphIcon} alt="What-If Planner" />
         </NavLink>
 
         <NavLink to="/settings" className="nav-item">

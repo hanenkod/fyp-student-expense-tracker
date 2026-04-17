@@ -6,6 +6,7 @@ import { Onboarding } from "./components/Onboarding";
 import { Profile } from "./components/Profile";
 import { Transactions } from "./components/Transactions";
 import { Settings } from "./components/Settings";
+import { WhatIf } from "./components/WhatIf";
 import {
   AuthOnlyRoute,
   ProtectedDashboardRoute,
@@ -82,12 +83,17 @@ function App() {
         />
 
         <Route
-          path="/analytics"
+          path="/whatif"
           element={
             <ProtectedDashboardRoute>
-              <PlaceholderPage title="Analytics" />
+              <WhatIf />
             </ProtectedDashboardRoute>
           }
+        />
+
+        <Route
+          path="/analytics"
+          element={<Navigate to="/whatif" replace />}
         />
 
         <Route

@@ -59,18 +59,27 @@ export const Dashboard = () => {
     .filter((t) => t.type === "income")
     .reduce((s, t) => s + Number(t.amount || 0), 0);
 
+  // True current balance = monthly income + extra income this month - expenses this month.
+  // Can go negative if user overspent.
+  const currentBalance = income + totalIncome - totalExpenses;
+  // Remaining budget from the onboarding income only (used for Safe to Spend, capped at 0).
   const remainingBudget = Math.max(income - totalExpenses, 0);
   const safeToSpend = remainingDays > 0 ? remainingBudget / remainingDays : 0;
 
-  const remainingPercent = income > 0 ? (remainingBudget / income) * 100 : 0;
+  const remainingPercent = income > 0 ? Math.max(0, (currentBalance / income) * 100) : 0;
   const displayIncome = totalIncome > 0 ? totalIncome : income;
-  const incomeCoveragePercent =
-    totalExpenses > 0 ? (displayIncome / totalExpenses) * 100 : displayIncome > 0 ? 100 : 0;
   const expensePercent = income > 0 ? (totalExpenses / income) * 100 : 0;
+  const expensePercentDisplay = Math.min(999, expensePercent);
 
-  const balancePositive = remainingBudget > 0;
-  const incomeCoveragePositive = displayIncome >= totalExpenses;
-  const expensePositive = totalExpenses <= income;
+  // Savings rate — what % of all available money is not spent (capped 0-100)
+  const availableIncome = income + totalIncome;
+  const savingsRate = availableIncome > 0
+    ? Math.max(0, Math.min(100, ((availableIncome - totalExpenses) / availableIncome) * 100))
+    : 0;
+
+  const balancePositive = currentBalance > 0;
+  const savingsPositive = savingsRate >= 20;
+  const expensePositive = expensePercent <= 100;
 
   let paceStatus = "positive";
   let paceText = "Healthy plan";
@@ -148,7 +157,7 @@ export const Dashboard = () => {
               <MetricCard
                 className="card--sm metric-accent"
                 title="Current Balance"
-                value={formatCurrency(remainingBudget)}
+                value={formatCurrency(currentBalance)}
                 footer={
                   <div className={`chip ${balancePositive ? "chip-positive" : "chip-negative"}`}>
                     <span>{formatPercent(remainingPercent)} left</span>
@@ -224,9 +233,9 @@ export const Dashboard = () => {
                     title="Total Income"
                     value={formatCurrency(displayIncome)}
                     footer={
-                      <div className={`chip ${incomeCoveragePositive ? "chip-positive" : "chip-negative"}`}>
-                        <span>{formatPercent(incomeCoveragePercent)} cover</span>
-                        <TrendArrow direction={incomeCoveragePositive ? "up" : "down"} />
+                      <div className={`chip ${savingsPositive ? "chip-positive" : "chip-negative"}`}>
+                        <span>{formatPercent(savingsRate)} saved</span>
+                        <TrendArrow direction={savingsPositive ? "up" : "down"} />
                       </div>
                     }
                   />
@@ -236,7 +245,7 @@ export const Dashboard = () => {
                     value={formatCurrency(totalExpenses)}
                     footer={
                       <div className={`chip ${expensePositive ? "chip-positive" : "chip-negative"}`}>
-                        <span>{formatPercent(expensePercent)} of income</span>
+                        <span>{formatPercent(expensePercentDisplay)} of income</span>
                         <TrendArrow direction={expensePositive ? "up" : "down"} />
                       </div>
                     }
