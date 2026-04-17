@@ -16,8 +16,8 @@ export const Sidebar = () => {
           <img src={homeIcon} alt="Home" />
         </NavLink>
 
-        <NavLink to="/cards" className="nav-item">
-          <img src={cardIcon} alt="Cards" />
+        <NavLink to="/transactions" className="nav-item">
+          <img src={cardIcon} alt="Transactions" />
         </NavLink>
 
         <NavLink to="/analytics" className="nav-item">

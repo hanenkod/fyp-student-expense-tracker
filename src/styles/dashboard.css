@@ -1,0 +1,207 @@
+/* ============================================================
+   DASHBOARD — page-specific grids, chart, pace, tooltip
+   All columns use minmax(0, Xfr) so the grids exactly fill
+   their container regardless of child min-content widths.
+   ============================================================ */
+
+/* ── Page grids ── */
+.grid-top {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-20);
+  margin-bottom: var(--space-20);
+}
+
+.grid-middle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-20);
+  margin-bottom: var(--space-20);
+}
+
+.grid-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-20);
+}
+
+.right-col {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-20);
+  min-width: 0;
+}
+
+.right-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-20);
+}
+
+/* ── Chart ── */
+.card.trends {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.chart-layout {
+  display: grid;
+  grid-template-columns: 37px minmax(0, 1fr);
+  align-items: end;
+  column-gap: 15px;
+  width: 100%;
+  height: var(--chart-height);
+  box-sizing: border-box;
+}
+
+.chart-ylabels {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 14px;
+  font-family: "Inter-Black", Helvetica;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-main);
+}
+
+.chart-bars {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding-right: 15px;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.bar {
+  width: 36px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.bar--lilac { background: var(--color-lilac); }
+.bar--accent { background: var(--color-accent); }
+.bar--indigo { background: var(--color-indigo); }
+.bar--deep { background: var(--color-deep); }
+
+/* ── Pace / monthly plan ── */
+.pace-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-10);
+  width: fit-content;
+  max-width: 100%;
+  border-radius: var(--radius-8);
+  padding: 5px 10px;
+  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pace-pill--positive {
+  background: #cfeecb;
+  color: #2f7a3d;
+}
+
+.pace-pill--warning {
+  background: #ffb285;
+  color: #b24613;
+}
+
+.pace-pill--danger {
+  background: #ffb0b0;
+  color: #a62323;
+}
+
+.pace-muted {
+  margin: 14px 0 0;
+  font-family: "Inter-Black", Helvetica;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-soft);
+  line-height: 1.2;
+}
+
+.pace-strong {
+  margin: 8px 0 0;
+  font-family: "Inter-Black", Helvetica;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+/* ── Safe to Spend tooltip ── */
+.safe-card {
+  position: relative;
+}
+
+.safe-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 10px;
+  width: 260px;
+  z-index: 10;
+}
+
+.safe-tooltip-content {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.safe-tooltip-title {
+  margin: 0 0 6px;
+  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.safe-tooltip-content p {
+  margin: 6px 0;
+  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+.safe-tooltip-close {
+  margin-top: 8px;
+  width: 100%;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-accent);
+  color: white;
+  cursor: pointer;
+  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1200px) {
+  .grid-top,
+  .grid-middle,
+  .grid-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .right-metrics {
+    grid-template-columns: 1fr;
+  }
+}

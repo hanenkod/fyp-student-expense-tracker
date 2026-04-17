@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Card, CardHeader, CardContent, CardFooter } from "./Card";
 import { BarChartMock } from "./BarChartMock";
@@ -7,129 +8,122 @@ import { MetricCard } from "./MetricCard";
 import { TrendArrow } from "./TrendArrow";
 
 import "../styles/style.css";
-
-const transactions = [
-  { name: "Tesco", amount: "-£80" },
-  { name: "Vodafone", amount: "-£20" },
-  { name: "Mom", amount: "+£300" },
-  { name: "Transport For London", amount: "-£10.45" },
-  { name: "Student Finance", amount: "+£4280" },
-  { name: "McDonald’s", amount: "-£15" },
-];
-
-const scheduledPayments = [
-  { name: "Spotify", amount: "£7.99" },
-  { name: "Youtube Premium", amount: "£16.99" },
-  { name: "Pure Gym", amount: "£32.99" },
-];
-
-const savingsPanels = [
-  {
-    title: "Emergency",
-    leftAmount: "£800",
-    percent: 80,
-    target: "£1000",
-    progressValue: 80,
-  },
-  {
-    title: "Vacation",
-    leftAmount: "£0",
-    target: "£2000",
-    progressValue: 0,
-  },
-];
-
-const trendBars = [
-  { height: 42, className: "bar--lilac" },
-  { height: 90, className: "bar--indigo" },
-  { height: 60, className: "bar--accent" },
-  { height: 117, className: "bar--deep" },
-  { height: 93, className: "bar--indigo" },
-  { height: 46, className: "bar--lilac" },
-  { height: 73, className: "bar--accent" },
-  { height: 113, className: "bar--deep" },
-  { height: 86, className: "bar--indigo" },
-  { height: 102, className: "bar--deep" },
-  { height: 61, className: "bar--accent" },
-  { height: 80, className: "bar--indigo" },
-];
+import "../styles/dashboard.css";
 
 const getStoredJSON = (key) => {
   try {
     const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : {};
+    return value ? JSON.parse(value) : null;
   } catch {
-    return {};
+    return null;
   }
 };
 
-const formatCurrency = (value) => {
-  return `£${Number(value || 0).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })}`;
-};
+const formatCurrency = (value) =>
+  `£${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-const formatCurrencyFixed = (value) => {
-  return `£${Number(value || 0).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-};
+const formatCurrencyFixed = (value) =>
+  `£${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-const formatPercent = (value) => {
-  return `${Math.round(value)}%`;
-};
+const formatPercent = (value) => `${Math.round(value)}%`;
 
-const getMonthMeta = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const dayOfMonth = today.getDate();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const remainingDays = daysInMonth - dayOfMonth + 1;
-
-  return {
-    dayOfMonth,
-    daysInMonth,
-    remainingDays,
-  };
-};
+const barColors = ["bar--lilac", "bar--indigo", "bar--accent", "bar--deep"];
 
 export const Dashboard = () => {
-  const onboardingData = getStoredJSON("pockeOnboarding");
-  const userData = getStoredJSON("pockeUser");
+  const navigate = useNavigate();
+
+  const onboardingData = getStoredJSON("pockeOnboarding") || {};
+  const userData = getStoredJSON("pockeUser") || {};
+  const allTransactions = getStoredJSON("pockeTransactions") || [];
+  const scheduledPayments = getStoredJSON("pockeScheduledPayments") || [];
+  const savingsGoals = getStoredJSON("pockeGoals") || [];
 
   const income = Number(onboardingData.income || 0);
-  const expenses = Number(onboardingData.expenses || 0);
 
-  const { remainingDays } = getMonthMeta();
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const remainingDays = daysInMonth - dayOfMonth + 1;
 
-  const remainingBudget = Math.max(income - expenses, 0);
+  // Real totals from transactions
+  const thisMonthTx = allTransactions.filter((t) => {
+    const d = new Date(t.date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const totalExpenses = thisMonthTx
+    .filter((t) => t.type === "expense")
+    .reduce((s, t) => s + Number(t.amount || 0), 0);
+
+  const totalIncome = thisMonthTx
+    .filter((t) => t.type === "income")
+    .reduce((s, t) => s + Number(t.amount || 0), 0);
+
+  const remainingBudget = Math.max(income - totalExpenses, 0);
   const safeToSpend = remainingDays > 0 ? remainingBudget / remainingDays : 0;
 
   const remainingPercent = income > 0 ? (remainingBudget / income) * 100 : 0;
-  const incomeCoveragePercent =
-    expenses > 0 ? (income / expenses) * 100 : income > 0 ? 100 : 0;
-  const expensePercent = income > 0 ? (expenses / income) * 100 : 0;
+  const displayIncome = totalIncome > 0 ? totalIncome : income;
 
-  const incomeCoveragePositive = income >= expenses;
-  const expensePositive = expenses <= income;
+  // Savings rate: what % of income is not spent (0-100, capped)
+  const savingsRate = displayIncome > 0 ? Math.max(0, Math.min(100, ((displayIncome - totalExpenses) / displayIncome) * 100)) : 0;
+
+  // Expense ratio: what % of income went to expenses (can exceed 100 when overspent)
+  const expensePercent = income > 0 ? (totalExpenses / income) * 100 : 0;
+  const expensePercentDisplay = Math.min(999, expensePercent);
+
   const balancePositive = remainingBudget > 0;
+  const savingsPositive = savingsRate >= 20;
+  const expensePositive = expensePercent <= 100;
 
-  let paceStatus = "warning";
-  let paceText = "Moderate plan";
-
-  if (expensePercent <= 50) {
-    paceStatus = "positive";
-    paceText = "Healthy plan";
-  } else if (expensePercent <= 80) {
-    paceStatus = "warning";
-    paceText = "Moderate plan";
-  } else {
+  let paceStatus = "positive";
+  let paceText = "Healthy plan";
+  if (expensePercent > 80) {
     paceStatus = "danger";
-    paceText = "Heavy plan";
+    paceText = "Heavy spending";
+  } else if (expensePercent > 50) {
+    paceStatus = "warning";
+    paceText = "Moderate spending";
   }
+
+  // Recent transactions
+  const recentTx = [...allTransactions]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 6);
+
+  // Savings
+  const totalSaved = savingsGoals.reduce((s, g) => s + (g.saved || 0), 0);
+  const savingsPanelData = savingsGoals.slice(0, 2).map((g) => ({
+    title: g.title,
+    leftAmount: `£${(g.saved || 0).toLocaleString()}`,
+    percent: g.target > 0 ? Math.round((g.saved / g.target) * 100) : 0,
+    target: `£${g.target.toLocaleString()}`,
+    progressValue: g.target > 0 ? Math.round((g.saved / g.target) * 100) : 0,
+  }));
+
+  // Daily spending chart (last 12 days, left=oldest → right=newest)
+  const dailySpending = {};
+  thisMonthTx
+    .filter((t) => t.type === "expense")
+    .forEach((t) => {
+      const day = new Date(t.date).getDate();
+      dailySpending[day] = (dailySpending[day] || 0) + Number(t.amount || 0);
+    });
+
+  const trendDays = [];
+  for (let i = Math.max(1, dayOfMonth - 11); i <= dayOfMonth; i++) {
+    trendDays.push(i);
+  }
+
+  const maxSpend = Math.max(...trendDays.map((d) => dailySpending[d] || 0), 1);
+  const trendBars = trendDays.map((d, idx) => ({
+    height: Math.max(((dailySpending[d] || 0) / maxSpend) * 130, 4),
+    className: barColors[idx % barColors.length],
+  }));
+
+  const maxLabel = Math.ceil(maxSpend / 10) * 10 || 10;
 
   return (
     <div className="dashboard">
@@ -154,28 +148,15 @@ export const Dashboard = () => {
               <SafeToSpendCard
                 title="Safe to Spend Today"
                 amount={formatCurrencyFixed(safeToSpend)}
-                actionText="How it’s calculated?"
-                onAction={() =>
-                  console.log("Safe to Spend:", {
-                    income,
-                    expenses,
-                    remainingBudget,
-                    remainingDays,
-                    safeToSpend,
-                  })
-                }
+                actionText="How it's calculated?"
+                onAction={() => {}}
               />
-
               <MetricCard
                 className="card--sm metric-accent"
                 title="Current Balance"
                 value={formatCurrency(remainingBudget)}
                 footer={
-                  <div
-                    className={`chip ${
-                      balancePositive ? "chip-positive" : "chip-negative"
-                    }`}
-                  >
+                  <div className={`chip ${balancePositive ? "chip-positive" : "chip-negative"}`}>
                     <span>{formatPercent(remainingPercent)} left</span>
                     <TrendArrow direction={balancePositive ? "up" : "down"} />
                   </div>
@@ -188,24 +169,30 @@ export const Dashboard = () => {
                 <CardHeader
                   title="Recent Transactions"
                   action={
-                    <button className="btn-mini chip chip-seeall" type="button">
+                    <button className="btn-mini chip chip-seeall" type="button" onClick={() => navigate("/transactions")}>
                       See all
                     </button>
                   }
                 />
-
                 <CardContent className="card-content--section">
-                  <ul className="list">
-                    {transactions.map((t) => (
-                      <li className="row" key={`${t.name}-${t.amount}`}>
-                        <span className="dot" />
-                        <span className="row-title">{t.name}</span>
-                        <span className="row-amount">{t.amount}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  {recentTx.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "20px 0" }}>
+                      No transactions yet
+                    </p>
+                  ) : (
+                    <ul className="list">
+                      {recentTx.map((t) => (
+                        <li className="row" key={t.id}>
+                          <span className="dot" style={{ background: t.type === "income" ? "#5dbb63" : "#555" }} />
+                          <span className="row-title">{t.name}</span>
+                          <span className="row-amount" style={{ color: t.type === "income" ? "#5dbb63" : "var(--text-main)" }}>
+                            {t.type === "expense" ? "-" : "+"}£{t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </CardContent>
-
                 <CardFooter className="card-footer--tight" />
               </Card>
 
@@ -213,28 +200,26 @@ export const Dashboard = () => {
                 <CardHeader>
                   <div className="stack-8">
                     <div className="card-title">Savings</div>
-
                     <div className="stack-5">
                       <div className="card-muted">Total Savings</div>
-                      <div className="card-value">£800</div>
+                      <div className="card-value">£{totalSaved.toLocaleString()}</div>
                     </div>
                   </div>
-
                   <div className="card-header__action">
-                    <button className="btn-mini chip chip-seeall" type="button">
-                      See all
-                    </button>
+                    <button className="btn-mini chip chip-seeall" type="button" onClick={() => navigate("/transactions")}>Manage</button>
                   </div>
                 </CardHeader>
-
                 <CardContent className="card-content--sectionless">
                   <div className="subcards">
-                    {savingsPanels.map((p) => (
-                      <SavingsPanel key={p.title} {...p} />
-                    ))}
+                    {savingsPanelData.length === 0 ? (
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "20px 0" }}>
+                        No savings goals yet
+                      </p>
+                    ) : (
+                      savingsPanelData.map((p) => <SavingsPanel key={p.title} {...p} />)
+                    )}
                   </div>
                 </CardContent>
-
                 <CardFooter className="card-footer--tight" />
               </Card>
 
@@ -243,34 +228,21 @@ export const Dashboard = () => {
                   <MetricCard
                     className="card--sm card-soft"
                     title="Total Income"
-                    value={formatCurrency(income)}
+                    value={formatCurrency(displayIncome)}
                     footer={
-                      <div
-                        className={`chip ${
-                          incomeCoveragePositive
-                            ? "chip-positive"
-                            : "chip-negative"
-                        }`}
-                      >
-                        <span>{formatPercent(incomeCoveragePercent)} cover</span>
-                        <TrendArrow
-                          direction={incomeCoveragePositive ? "up" : "down"}
-                        />
+                      <div className={`chip ${savingsPositive ? "chip-positive" : "chip-negative"}`}>
+                        <span>{formatPercent(savingsRate)} saved</span>
+                        <TrendArrow direction={savingsPositive ? "up" : "down"} />
                       </div>
                     }
                   />
-
                   <MetricCard
                     className="card--sm card-soft"
                     title="Total Expense"
-                    value={formatCurrency(expenses)}
+                    value={formatCurrency(totalExpenses)}
                     footer={
-                      <div
-                        className={`chip ${
-                          expensePositive ? "chip-positive" : "chip-negative"
-                        }`}
-                      >
-                        <span>{formatPercent(expensePercent)} of income</span>
+                      <div className={`chip ${expensePositive ? "chip-positive" : "chip-negative"}`}>
+                        <span>{formatPercent(expensePercentDisplay)} of income</span>
                         <TrendArrow direction={expensePositive ? "up" : "down"} />
                       </div>
                     }
@@ -281,24 +253,26 @@ export const Dashboard = () => {
                   <CardHeader
                     title="Scheduled Payments"
                     action={
-                      <button className="btn-mini chip chip-seeall" type="button">
-                        See all
-                      </button>
+                      <button className="btn-mini chip chip-seeall" type="button" onClick={() => navigate("/transactions")}>See all</button>
                     }
                   />
-
                   <CardContent className="card-content--section">
-                    <ul className="list">
-                      {scheduledPayments.map((p) => (
-                        <li className="row" key={`${p.name}-${p.amount}`}>
-                          <span className="dot" />
-                          <span className="row-title">{p.name}</span>
-                          <span className="row-amount">{p.amount}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {scheduledPayments.length === 0 ? (
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "12px 0" }}>
+                        No scheduled payments
+                      </p>
+                    ) : (
+                      <ul className="list">
+                        {scheduledPayments.slice(0, 3).map((p) => (
+                          <li className="row" key={p.id || p.name}>
+                            <span className="dot" />
+                            <span className="row-title">{p.name}</span>
+                            <span className="row-amount">£{p.amount.toFixed(2)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </CardContent>
-
                   <CardFooter className="card-footer--tight" />
                 </Card>
               </div>
@@ -308,44 +282,38 @@ export const Dashboard = () => {
               <Card className="trends card--lg card-soft">
                 <CardHeader
                   className="card-header--stack"
-                  title="Earning Trends"
-                  subtitle="Here is summary of your finances"
+                  title="Spending Trends"
+                  subtitle="Daily spending this month"
                 />
-
                 <CardContent className="card-content--chart">
                   <div className="chart-layout">
                     <div className="chart-ylabels">
-                      <span>£200</span>
-                      <span>£100</span>
-                      <span>£50</span>
-                      <span>£10</span>
+                      <span>£{maxLabel}</span>
+                      <span>£{Math.round(maxLabel * 0.66)}</span>
+                      <span>£{Math.round(maxLabel * 0.33)}</span>
+                      <span>£0</span>
                     </div>
-
                     <BarChartMock bars={trendBars} />
                   </div>
                 </CardContent>
-
                 <CardFooter className="card-footer--tight" />
               </Card>
 
               <Card className="pace card--lg card-soft">
                 <CardHeader title="Monthly Expense Plan" />
-
                 <CardContent className="card-content--pace">
                   <div className={`pace-pill pace-pill--${paceStatus}`}>
                     <span className={`dot tiny dot-${paceStatus}`} />
                     <span>{paceText}</span>
                   </div>
-
                   <p className="pace-muted">How healthy is your monthly plan?</p>
                   <p className="pace-strong">
-                    Planned monthly expenses: {formatCurrencyFixed(expenses)}
+                    Spent this month: {formatCurrencyFixed(totalExpenses)} of {formatCurrencyFixed(income)} income
                   </p>
                   <p className="pace-strong">
                     This equals {formatPercent(expensePercent)} of your income
                   </p>
                 </CardContent>
-
                 <CardFooter className="card-footer--tight" />
               </Card>
             </section>
@@ -354,4 +322,4 @@ export const Dashboard = () => {
       </div>
     </div>
   );
-}; 
+};

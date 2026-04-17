@@ -29,7 +29,7 @@
   box-sizing: border-box;
 }
 
-.app-shell {
+.authScreen .app-shell {
   width: 100%;
   max-width: 1360px;
   min-height: calc(100vh - 48px);
@@ -40,7 +40,7 @@
   overflow: hidden;
 }
 
-.app-panel {
+.authScreen .app-panel {
   background-color: var(--color-bg-panel);
   border-radius: var(--radius-panel);
 }
@@ -367,7 +367,7 @@
 }
 
 @media (max-width: 1100px) {
-  .app-shell {
+  .authScreen .app-shell {
     flex-direction: column;
   }
 

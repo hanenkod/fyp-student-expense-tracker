@@ -43,28 +43,21 @@ export const Onboarding = () => {
 
   const [step, setStep] = useState(1);
   const [income, setIncome] = useState("");
-  const [expenses, setExpenses] = useState("");
 
   const numericIncome = useMemo(() => parseCurrencyValue(income), [income]);
-  const numericExpenses = useMemo(() => parseCurrencyValue(expenses), [expenses]);
 
   const remainingDays = useMemo(() => getRemainingDaysInMonth(), []);
-  const remainingBudget = Math.max(numericIncome - numericExpenses, 0);
-  const safeToSpend = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+  const safeToSpend = remainingDays > 0 ? numericIncome / remainingDays : 0;
 
   const handleIncomeChange = (event) => {
     setIncome(formatCurrencyInput(event.target.value));
   };
 
-  const handleExpensesChange = (event) => {
-    setExpenses(formatCurrencyInput(event.target.value));
-  };
-
   const handleFinish = () => {
     const onboardingData = {
       income: numericIncome,
-      expenses: numericExpenses,
-      remainingBudget,
+      expenses: 0,
+      remainingBudget: numericIncome,
       remainingDays,
       safeToSpend,
       completed: true,
@@ -76,7 +69,6 @@ export const Onboarding = () => {
   };
 
   const isIncomeStepDisabled = numericIncome <= 0;
-  const isExpensesStepDisabled = numericExpenses < 0 || expenses.trim() === "";
 
   return (
     <section className="registration page-shell authScreen authScreen--animated">
@@ -117,11 +109,11 @@ export const Onboarding = () => {
             {step === 1 && (
               <Module
                 title="Tell Us More About Yourself"
-                description="As we do not use any bank integrations, some details will need to be entered manually once. You can change these details at any time."
+                description="Enter your monthly income so we can calculate your daily safe-to-spend amount. Your expenses will be tracked automatically as you add transactions."
                 label="Your Monthly Income"
                 placeholder="£0"
                 buttonText="Next"
-                step="01/03"
+                step="01/02"
                 value={income}
                 onChange={handleIncomeChange}
                 onNext={() => setStep(2)}
@@ -131,29 +123,14 @@ export const Onboarding = () => {
 
             {step === 2 && (
               <Module
-                title="Tell Us More About Yourself"
-                description="Add your estimated monthly expenses so we can prepare your dashboard and calculate your daily safe-to-spend amount."
-                label="Your Monthly Expenses"
-                placeholder="£0"
-                buttonText="Next"
-                step="02/03"
-                value={expenses}
-                onChange={handleExpensesChange}
-                onNext={() => setStep(3)}
-                isNextDisabled={isExpensesStepDisabled}
-              />
-            )}
-
-            {step === 3 && (
-              <Module
                 title="You're Now All Set"
-                description={`Your estimated Safe to Spend Today is £${safeToSpend.toFixed(
-                  2
-                )}. This is based on a remaining budget of £${remainingBudget.toLocaleString()} across ${remainingDays} day${
+                description={`Your monthly income is £${numericIncome.toLocaleString()}. With ${remainingDays} day${
                   remainingDays === 1 ? "" : "s"
-                } left this month.`}
-                buttonText="Finish"
-                step="03/03"
+                } left this month, your Safe to Spend Today is £${safeToSpend.toFixed(
+                  2
+                )}. Start adding transactions to track your spending!`}
+                buttonText="Go to Dashboard"
+                step="02/02"
                 showInput={false}
                 onNext={handleFinish}
               />

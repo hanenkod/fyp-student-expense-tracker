@@ -4,6 +4,7 @@ import { Registration } from "./components/Registration";
 import { Login } from "./components/Login";
 import { Onboarding } from "./components/Onboarding";
 import { Profile } from "./components/Profile";
+import { Transactions } from "./components/Transactions";
 import {
   AuthOnlyRoute,
   ProtectedDashboardRoute,
@@ -71,10 +72,10 @@ function App() {
         />
 
         <Route
-          path="/cards"
+          path="/transactions"
           element={
             <ProtectedDashboardRoute>
-              <PlaceholderPage title="Cards" />
+              <Transactions />
             </ProtectedDashboardRoute>
           }
         />

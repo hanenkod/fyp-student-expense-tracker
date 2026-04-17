@@ -1,4 +1,8 @@
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
 :root {
+  /* Spacing */
   --space-0: 0px;
   --space-5: 5px;
   --space-8: 8px;
@@ -7,11 +11,19 @@
   --space-20: 20px;
   --space-36: 36px;
 
+  /* Radius */
   --radius-8: 8px;
   --radius-12: 12px;
   --radius-24: 24px;
   --radius-32: 32px;
 
+  /* Shell geometry */
+  --shell-max: 1360px;
+  --sidebar-width: 127px;
+  --shell-padding: 12px;
+  --content-padding: var(--space-36);
+
+  /* Colors */
   --color-lilac: #dabfff;
   --color-accent: #907ad6;
   --color-indigo: #4f518c;
@@ -33,31 +45,19 @@
   --chart-height: 140px;
 }
 
-/* Stack utilities */
-.stack-0 {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-0);
-}
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.stack-0 { display: flex; flex-direction: column; gap: var(--space-0); }
+.stack-5 { display: flex; flex-direction: column; gap: var(--space-5); }
+.stack-8 { display: flex; flex-direction: column; gap: var(--space-8); }
+.stack-10 { display: flex; flex-direction: column; gap: var(--space-10); }
 
-.stack-5 {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.stack-8 {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
-
-.stack-10 {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-10);
-}
-
+/* ============================================================
+   SHELL — used by ALL pages
+   Grid layout with fixed sidebar column and clamped content column.
+   Only .content scrolls; everything else stays put.
+   ============================================================ */
 .dashboard {
   height: 100vh;
   display: flex;
@@ -69,25 +69,27 @@
 }
 
 .app-shell {
-  width: min(1360px, 100%);
+  width: min(var(--shell-max), 100%);
+  height: 100%;
   margin: 0 auto;
   background: var(--bg-shell);
   border-radius: var(--radius-32);
   box-shadow: var(--shadow-soft);
   overflow: hidden;
-  height: 100%;
 }
 
 .layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   height: 100%;
-  padding: 12px 12px 12px 0;
+  padding: var(--shell-padding) var(--shell-padding) var(--shell-padding) 0;
   box-sizing: border-box;
 }
 
-/* Sidebar */
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 .sidebar {
-  width: 127px;
   background: var(--bg-shell);
   border-radius: 32px 0 0 32px;
   display: flex;
@@ -95,7 +97,6 @@
   align-items: center;
   padding: 35px 0 20px;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
 .brand {
@@ -156,20 +157,27 @@
   margin-top: auto;
 }
 
-/* Content — only this scrolls */
+/* ============================================================
+   CONTENT — the only scroll container
+   width:100% + min-width:0 guarantees identical width on all pages
+   regardless of what's inside (fractional grids, fixed widths, etc.)
+   ============================================================ */
 .content {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
   background: var(--bg-content);
   border-radius: var(--radius-24);
-  padding: var(--space-36);
+  padding: var(--content-padding);
   box-sizing: border-box;
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: rgba(44, 42, 74, 0.15) transparent;
+  scrollbar-color: rgba(44, 42, 74, 0.2) transparent;
 }
 
 .content::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .content::-webkit-scrollbar-track {
@@ -178,15 +186,21 @@
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: rgba(44, 42, 74, 0.15);
-  border-radius: 10px;
+  background: rgba(44, 42, 74, 0.2);
+  border-radius: 999px;
 }
 
 .content::-webkit-scrollbar-thumb:hover {
-  background: rgba(44, 42, 74, 0.3);
+  background: rgba(44, 42, 74, 0.35);
 }
 
-/* Overview */
+.content::-webkit-scrollbar-thumb:active {
+  background: rgba(44, 42, 74, 0.5);
+}
+
+/* ============================================================
+   OVERVIEW HEADER — used by ALL pages
+   ============================================================ */
 .overview {
   margin-bottom: 18px;
 }
@@ -218,30 +232,9 @@
   min-width: 0;
 }
 
-.dashboard-logout {
-  height: 45px;
-  padding: 0 18px;
-  border: none;
-  border-radius: 12px;
-  background: var(--color-accent);
-  color: #ffffff;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.dashboard-logout:hover {
-  background: #7d68c0;
-}
-
-.dashboard-logout:active {
-  transform: translateY(1px);
-}
-
-/* Card system */
+/* ============================================================
+   CARD SYSTEM — used everywhere
+   ============================================================ */
 .card {
   border: 1px solid transparent;
   border-radius: var(--radius-12);
@@ -346,23 +339,14 @@
 }
 
 /* Card sizes */
-.card--sm {
-  height: 127px;
-}
+.card--sm { height: 127px; }
+.card--md { height: 171px; }
+.card--lg { height: 202px; }
+.card--xl { height: 318px; }
 
-.card--md {
-  height: 171px;
-}
-
-.card--lg {
-  height: 202px;
-}
-
-.card--xl {
-  height: 318px;
-}
-
-/* Typography */
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
 .card-title {
   font-family: "Inter-Black", Helvetica;
   font-size: 14px;
@@ -413,7 +397,9 @@
   line-height: 1.2;
 }
 
-/* Buttons / chips */
+/* ============================================================
+   CHIPS & BUTTONS
+   ============================================================ */
 .btn-mini {
   border: 0;
   cursor: pointer;
@@ -438,9 +424,7 @@
   white-space: nowrap;
 }
 
-.chip-trend {
-  gap: 3px;
-}
+.chip-trend { gap: 3px; }
 
 .chip-seeall {
   background: rgba(144, 122, 214, 0.35);
@@ -468,40 +452,9 @@
   transform: rotate(180deg);
 }
 
-/* Grid layout */
-.grid-top {
-  display: grid;
-  grid-template-columns: 758px 371px;
-  gap: var(--space-20);
-  margin-bottom: var(--space-20);
-}
-
-.grid-middle {
-  display: grid;
-  grid-template-columns: 369px 369px 371px;
-  gap: var(--space-20);
-  margin-bottom: var(--space-20);
-}
-
-.grid-bottom {
-  display: grid;
-  grid-template-columns: 758px 371px;
-  gap: var(--space-20);
-}
-
-.right-col {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: var(--space-20);
-}
-
-.right-metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-20);
-}
-
-/* Lists */
+/* ============================================================
+   LISTS
+   ============================================================ */
 .list {
   list-style: none;
   padding: 0;
@@ -512,7 +465,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 24px 1fr auto;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 8px;
 }
@@ -529,23 +482,18 @@
   height: 12px;
 }
 
-.dot-positive {
-  background: #5dbb63;
-}
-
-.dot-warning {
-  background: #f47f42;
-}
-
-.dot-danger {
-  background: #e05252;
-}
+.dot-positive { background: #5dbb63; }
+.dot-warning { background: #f47f42; }
+.dot-danger { background: #e05252; }
 
 .row-title {
   font-family: "Inter-Regular", Helvetica;
   font-size: 12px;
   font-weight: 400;
   color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .row-amount {
@@ -554,9 +502,12 @@
   font-weight: 400;
   text-align: right;
   color: var(--text-main);
+  white-space: nowrap;
 }
 
-/* Savings panels */
+/* ============================================================
+   SAVINGS SUBCARDS — shared by Dashboard and Transactions
+   ============================================================ */
 .subcards {
   display: grid;
   gap: var(--space-20);
@@ -635,7 +586,9 @@
   line-height: 1;
 }
 
-/* Progress */
+/* ============================================================
+   PROGRESS
+   ============================================================ */
 .progress {
   height: 10px;
   background: rgba(0, 0, 0, 0.08);
@@ -649,186 +602,13 @@
   border-radius: 10px;
 }
 
-/* Chart */
-.card.trends {
-  overflow: hidden;
-}
-
-.chart-layout {
-  display: grid;
-  grid-template-columns: 37px 1fr;
-  align-items: end;
-  column-gap: 15px;
-  width: 100%;
-  height: var(--chart-height);
-  box-sizing: border-box;
-}
-
-.chart-ylabels {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 14px;
-  font-family: "Inter-Black", Helvetica;
-  font-size: 12px;
-  font-weight: 900;
-  line-height: 1;
-  color: var(--text-main);
-}
-
-.chart-bars {
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  gap: 18px;
-  padding-right: 15px;
-  box-sizing: border-box;
-}
-
-.bar {
-  width: 36px;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.bar--lilac {
-  background: var(--color-lilac);
-}
-
-.bar--accent {
-  background: var(--color-accent);
-}
-
-.bar--indigo {
-  background: var(--color-indigo);
-}
-
-.bar--deep {
-  background: var(--color-deep);
-}
-
-/* Pace / monthly plan */
-.pace-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-10);
-  width: fit-content;
-  max-width: 100%;
-  border-radius: var(--radius-8);
-  padding: 5px 10px;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.pace-pill--positive {
-  background: #cfeecb;
-  color: #2f7a3d;
-}
-
-.pace-pill--warning {
-  background: #ffb285;
-  color: #b24613;
-}
-
-.pace-pill--danger {
-  background: #ffb0b0;
-  color: #a62323;
-}
-
-.pace-muted {
-  margin: 14px 0 0;
-  font-family: "Inter-Black", Helvetica;
-  font-size: 12px;
-  font-weight: 900;
-  color: var(--text-soft);
-  line-height: 1.2;
-}
-
-.pace-strong {
-  margin: 8px 0 0;
-  font-family: "Inter-Black", Helvetica;
-  font-size: 12px;
-  font-weight: 900;
-  color: var(--text-main);
-  line-height: 1.2;
-}
-
-/* Safe to spend tooltip */
-.safe-card {
-  position: relative;
-}
-
-.safe-tooltip {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 10px;
-  width: 260px;
-  z-index: 10;
-}
-
-.safe-tooltip-content {
-  background: white;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.safe-tooltip-title {
-  margin: 0 0 6px;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.safe-tooltip-content p {
-  margin: 6px 0;
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-main);
-}
-
-.safe-tooltip-close {
-  margin-top: 8px;
-  width: 100%;
-  height: 32px;
-  border: none;
-  border-radius: 8px;
-  background: var(--color-accent);
-  color: white;
-  cursor: pointer;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .grid-top,
-  .grid-middle,
-  .grid-bottom {
-    grid-template-columns: 1fr;
-  }
-
-  .right-metrics {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .content {
-    width: 100%;
-  }
-}
-
+/* ============================================================
+   RESPONSIVE — shell only
+   ============================================================ */
 @media (max-width: 768px) {
   .layout {
-    flex-direction: column;
-    padding: 12px;
+    grid-template-columns: 1fr;
+    padding: var(--shell-padding);
   }
 
   .sidebar {
@@ -856,9 +636,5 @@
   .overview-bar {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .right-metrics {
-    grid-template-columns: 1fr;
   }
 }
