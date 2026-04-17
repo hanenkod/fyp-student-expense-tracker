@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
+import { useSettings } from "./SettingsContext";
 import "../styles/style.css";
 import "../styles/profile.css";
 
@@ -109,7 +110,7 @@ const computeAchievements = (transactions, onboardingData, income, expenses) => 
 };
 
 // ── Budget Tips logic ──
-const generateTips = (income, expenses, transactions, onboardingData) => {
+const generateTips = (income, expenses, transactions, onboardingData, formatMoney) => {
   const tips = [];
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -219,7 +220,7 @@ const generateTips = (income, expenses, transactions, onboardingData) => {
         type: "info",
         icon: "🔍",
         title: `${topCat} dominates spending`,
-        text: `${topCat} accounts for ${topPercent}% of this month's spending (£${topAmount.toLocaleString()}). Consider setting a category budget to keep it in check.`,
+        text: `${topCat} accounts for ${topPercent}% of this month's spending (${formatMoney(topAmount)}). Consider setting a category budget to keep it in check.`,
       });
     }
   }
@@ -230,9 +231,7 @@ const generateTips = (income, expenses, transactions, onboardingData) => {
       type: "info",
       icon: "📊",
       title: "Daily spending guide",
-      text: `With ${daysLeft} days left this month, try to keep daily spending under £${dailySafe.toFixed(
-        2
-      )} to stay within your budget.`,
+      text: `With ${daysLeft} days left this month, try to keep daily spending under ${formatMoney(dailySafe, { minFractionDigits: 2, maxFractionDigits: 2 })} to stay within your budget.`,
     });
   }
 
@@ -264,7 +263,7 @@ const generateTips = (income, expenses, transactions, onboardingData) => {
       type: "info",
       icon: "🎓",
       title: "Student tip",
-      text: "With a tighter budget, focus on needs first. Free student discounts, meal prepping, and off-peak travel can save £50–100/month.",
+      text: "With a tighter budget, focus on needs first. Free student discounts, meal prepping, and off-peak travel can save a significant amount each month.",
     });
   }
 
@@ -273,6 +272,7 @@ const generateTips = (income, expenses, transactions, onboardingData) => {
 
 export const Profile = () => {
   const navigate = useNavigate();
+  const { formatMoney, currencyInfo } = useSettings();
   const userData = getStoredJSON("pockeUser");
   const onboardingData = getStoredJSON("pockeOnboarding");
 
@@ -432,8 +432,8 @@ export const Profile = () => {
 
   // Budget tips
   const tips = useMemo(
-    () => generateTips(income, expenses, transactions, onboardingData),
-    [income, expenses, transactions, onboardingData]
+    () => generateTips(income, expenses, transactions, onboardingData, formatMoney),
+    [income, expenses, transactions, onboardingData, formatMoney]
   );
 
   return (
@@ -469,7 +469,7 @@ export const Profile = () => {
                   <div className="profile-stats">
                     <div className="profile-stat">
                       <span className="profile-stat__value">
-                        £{income.toLocaleString()}
+                        {formatMoney(income)}
                       </span>
                       <span className="profile-stat__label">Income</span>
                     </div>
@@ -478,7 +478,7 @@ export const Profile = () => {
 
                     <div className="profile-stat">
                       <span className="profile-stat__value">
-                        £{expenses.toLocaleString()}
+                        {formatMoney(expenses)}
                       </span>
                       <span className="profile-stat__label">Expenses</span>
                     </div>
@@ -487,7 +487,7 @@ export const Profile = () => {
 
                     <div className="profile-stat">
                       <span className="profile-stat__value">
-                        £{balance.toLocaleString()}
+                        {formatMoney(balance)}
                       </span>
                       <span className="profile-stat__label">Balance</span>
                     </div>
@@ -690,7 +690,7 @@ export const Profile = () => {
                         Monthly Income
                       </label>
                       <p className="profile-field__value">
-                        £{income.toLocaleString()}
+                        {formatMoney(income)}
                       </p>
                     </div>
 
@@ -699,7 +699,7 @@ export const Profile = () => {
                         Monthly Expenses
                       </label>
                       <p className="profile-field__value">
-                        £{expenses.toLocaleString()}
+                        {formatMoney(expenses)}
                       </p>
                     </div>
                   </div>
@@ -738,11 +738,11 @@ export const Profile = () => {
                   <div className="summary-grid">
                     <div className="summary-tile">
                       <span className="summary-tile__icon summary-tile__icon--green">
-                        £
+                        {currencyInfo.symbol}
                       </span>
                       <div className="summary-tile__body">
                         <span className="summary-tile__value">
-                          £{monthlyEarned.toLocaleString()}
+                          {formatMoney(monthlyEarned)}
                         </span>
                         <span className="summary-tile__label">
                           Earned this month
@@ -752,11 +752,11 @@ export const Profile = () => {
 
                     <div className="summary-tile">
                       <span className="summary-tile__icon summary-tile__icon--red">
-                        £
+                        {currencyInfo.symbol}
                       </span>
                       <div className="summary-tile__body">
                         <span className="summary-tile__value">
-                          £{monthlySpent.toLocaleString()}
+                          {formatMoney(monthlySpent)}
                         </span>
                         <span className="summary-tile__label">
                           Spent this month

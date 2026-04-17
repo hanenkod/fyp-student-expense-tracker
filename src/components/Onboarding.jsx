@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Module } from "./Module";
+import { useSettings } from "./SettingsContext";
 import removebg1 from "./removebg-1.png";
 import "../styles/auth.css";
 
-const formatCurrencyInput = (rawValue) => {
+const formatCurrencyInput = (rawValue, symbol) => {
   const cleaned = rawValue.replace(/[^\d.]/g, "");
   const parts = cleaned.split(".");
 
@@ -18,8 +19,8 @@ const formatCurrencyInput = (rawValue) => {
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   return decimalPart !== ""
-    ? `£${formattedInteger}.${decimalPart}`
-    : `£${formattedInteger}`;
+    ? `${symbol}${formattedInteger}.${decimalPart}`
+    : `${symbol}${formattedInteger}`;
 };
 
 const parseCurrencyValue = (value) => {
@@ -40,6 +41,7 @@ const getRemainingDaysInMonth = () => {
 
 export const Onboarding = () => {
   const navigate = useNavigate();
+  const { formatMoney, currencyInfo } = useSettings();
 
   const [step, setStep] = useState(1);
   const [income, setIncome] = useState("");
@@ -50,7 +52,7 @@ export const Onboarding = () => {
   const safeToSpend = remainingDays > 0 ? numericIncome / remainingDays : 0;
 
   const handleIncomeChange = (event) => {
-    setIncome(formatCurrencyInput(event.target.value));
+    setIncome(formatCurrencyInput(event.target.value, currencyInfo.symbol));
   };
 
   const handleFinish = () => {
@@ -111,7 +113,7 @@ export const Onboarding = () => {
                 title="Tell Us More About Yourself"
                 description="Enter your monthly income so we can calculate your daily safe-to-spend amount. Your expenses will be tracked automatically as you add transactions."
                 label="Your Monthly Income"
-                placeholder="£0"
+                placeholder={`${currencyInfo.symbol}0`}
                 buttonText="Next"
                 step="01/02"
                 value={income}
@@ -124,11 +126,9 @@ export const Onboarding = () => {
             {step === 2 && (
               <Module
                 title="You're Now All Set"
-                description={`Your monthly income is £${numericIncome.toLocaleString()}. With ${remainingDays} day${
+                description={`Your monthly income is ${formatMoney(numericIncome)}. With ${remainingDays} day${
                   remainingDays === 1 ? "" : "s"
-                } left this month, your Safe to Spend Today is £${safeToSpend.toFixed(
-                  2
-                )}. Start adding transactions to track your spending!`}
+                } left this month, your Safe to Spend Today is ${formatMoney(safeToSpend, { minFractionDigits: 2, maxFractionDigits: 2 })}. Start adding transactions to track your spending!`}
                 buttonText="Go to Dashboard"
                 step="02/02"
                 showInput={false}

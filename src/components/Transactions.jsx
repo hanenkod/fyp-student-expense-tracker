@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { SavingsPanel } from "./SavingsPanel";
+import { useSettings } from "./SettingsContext";
 import "../styles/style.css";
 import "../styles/transactions.css";
 
@@ -45,6 +46,9 @@ const formatTime = (iso) => {
 };
 
 export const Transactions = () => {
+  const { formatMoney, currencyInfo } = useSettings();
+  const formatCurrencyFixed = (v) => formatMoney(v, { minFractionDigits: 2, maxFractionDigits: 2 });
+
   const [transactions, setTransactions] = useState(() => getStoredJSON("pockeTransactions") || []);
   const [scheduled, setScheduled] = useState(() => getStoredJSON("pockeScheduledPayments") || []);
   const [goals, setGoals] = useState(() => getStoredJSON("pockeGoals") || []);
@@ -80,17 +84,33 @@ export const Transactions = () => {
   const saveSp = (u) => { setScheduled(u); saveToStorage("pockeScheduledPayments", u); };
   const saveGoals = (u) => { setGoals(u); saveToStorage("pockeGoals", u); };
 
+  const handleAddCategory = () => {
+    const name = newCategory.trim();
+    if (!name) return;
+    const isExpense = txForm.type === "expense";
+    const current = isExpense ? customExpCat : customIncCat;
+    if (current.includes(name) || (isExpense ? EXPENSE_CATEGORIES : INCOME_CATEGORIES).includes(name)) {
+      setShowNewCategory(false); setNewCategory("");
+      return;
+    }
+    const updated = [...current, name];
+    if (isExpense) { setCustomExpCat(updated); saveToStorage("pockeCustomExpenseCategories", updated); }
+    else { setCustomIncCat(updated); saveToStorage("pockeCustomIncomeCategories", updated); }
+    setTxForm((p) => ({ ...p, category: name }));
+    setShowNewCategory(false); setNewCategory("");
+  };
+
   const handleAddTransaction = () => {
     if (!txForm.name.trim() || !txForm.amount || Number(txForm.amount) <= 0) return;
-    saveTx([{ id: `tx_${Date.now()}`, type: txForm.type, name: txForm.name.trim(), amount: Number(txForm.amount), category: txForm.category, date: new Date(txForm.date).toISOString() }, ...transactions]);
-    setTxForm((p) => ({ ...p, name: "", amount: "", date: new Date().toISOString().slice(0, 16) }));
+    saveTx([{ id: `tx_${Date.now()}`, type: txForm.type, name: txForm.name.trim(), category: txForm.category, amount: Number(txForm.amount), date: txForm.date }, ...transactions]);
+    setTxForm({ type: txForm.type, name: "", amount: "", category: txForm.type === "expense" ? "Food" : "Salary", date: new Date().toISOString().slice(0, 16) });
   };
 
   const handleDeleteTx = (id) => saveTx(transactions.filter((t) => t.id !== id));
 
   const handleStartEdit = (tx) => {
     setEditingTx(tx.id);
-    setEditForm({ name: tx.name, amount: tx.amount, category: tx.category, type: tx.type });
+    setEditForm({ name: tx.name, amount: String(tx.amount), category: tx.category, type: tx.type });
   };
 
   const handleSaveEdit = (id) => {
@@ -99,23 +119,12 @@ export const Transactions = () => {
     setEditingTx(null);
   };
 
-  const handleAddCategory = () => {
-    const cat = newCategory.trim();
-    if (!cat) return;
-    if (txForm.type === "expense") {
-      if (allExpCat.includes(cat)) return;
-      const u = [...customExpCat, cat]; setCustomExpCat(u); saveToStorage("pockeCustomExpenseCategories", u);
-    } else {
-      if (allIncCat.includes(cat)) return;
-      const u = [...customIncCat, cat]; setCustomIncCat(u); saveToStorage("pockeCustomIncomeCategories", u);
-    }
-    setTxForm((p) => ({ ...p, category: cat }));
-    setNewCategory(""); setShowNewCategory(false);
-  };
-
   const handlePresetSelect = (preset) => {
     if (preset === "__custom") { setShowCustomService(true); setSpForm((p) => ({ ...p, preset: "", name: "", amount: "" })); }
-    else { const f = PRESET_SERVICES.find((s) => s.name === preset); setShowCustomService(false); setSpForm((p) => ({ ...p, preset, name: f?.name || "", amount: f?.amount?.toString() || "" })); }
+    else {
+      const service = PRESET_SERVICES.find((s) => s.name === preset);
+      if (service) { setShowCustomService(false); setSpForm((p) => ({ ...p, preset, name: service.name, amount: String(service.amount) })); }
+    }
   };
 
   const handleAddScheduled = () => {
@@ -141,10 +150,8 @@ export const Transactions = () => {
     if (actualAmt <= 0) return;
     const nowIso = new Date().toISOString().slice(0, 16);
     const newTx = { id: `tx_${Date.now()}`, type: "expense", name: `Savings: ${goal.title}`, category: "Savings", amount: actualAmt, date: nowIso, source: "savings", goalId: id };
-    const updatedTx = [newTx, ...transactions];
-    const updatedGoals = goals.map((g) => g.id === id ? { ...g, saved: g.saved + actualAmt } : g);
-    saveTx(updatedTx);
-    saveGoals(updatedGoals);
+    saveTx([newTx, ...transactions]);
+    saveGoals(goals.map((g) => g.id === id ? { ...g, saved: g.saved + actualAmt } : g));
   };
 
   const handleWithdrawFromGoal = (id, amt) => {
@@ -153,10 +160,8 @@ export const Transactions = () => {
     const actualAmt = Math.min(amt, goal.saved);
     const nowIso = new Date().toISOString().slice(0, 16);
     const newTx = { id: `tx_${Date.now()}`, type: "income", name: `Withdraw: ${goal.title}`, category: "Savings", amount: actualAmt, date: nowIso, source: "savings", goalId: id };
-    const updatedTx = [newTx, ...transactions];
-    const updatedGoals = goals.map((g) => g.id === id ? { ...g, saved: g.saved - actualAmt } : g);
-    saveTx(updatedTx);
-    saveGoals(updatedGoals);
+    saveTx([newTx, ...transactions]);
+    saveGoals(goals.map((g) => g.id === id ? { ...g, saved: g.saved - actualAmt } : g));
   };
 
   const handleDeleteGoal = (id) => {
@@ -200,12 +205,12 @@ export const Transactions = () => {
                 <div className="tx-card card-soft">
                   <h3 className="tx-card__title">Add Transaction</h3>
                   <div className="tx-type-toggle">
-                    <button type="button" className={`tx-type-btn ${txForm.type === "expense" ? "tx-type-btn--active tx-type-btn--expense" : ""}`} onClick={() => handleTypeSwitch("expense")}>Expense</button>
-                    <button type="button" className={`tx-type-btn ${txForm.type === "income" ? "tx-type-btn--active tx-type-btn--income" : ""}`} onClick={() => handleTypeSwitch("income")}>Income</button>
+                    <button className={`tx-type-btn ${txForm.type === "expense" ? "tx-type-btn--active tx-type-btn--expense" : ""}`} onClick={() => handleTypeSwitch("expense")}>Expense</button>
+                    <button className={`tx-type-btn ${txForm.type === "income" ? "tx-type-btn--active tx-type-btn--income" : ""}`} onClick={() => handleTypeSwitch("income")}>Income</button>
                   </div>
                   <div className="tx-form">
                     <input type="text" placeholder="Transaction name" value={txForm.name} onChange={(e) => setTxForm((p) => ({ ...p, name: e.target.value }))} className="tx-input" />
-                    <input type="number" placeholder="Amount (£)" value={txForm.amount} onChange={(e) => setTxForm((p) => ({ ...p, amount: e.target.value }))} className="tx-input" min="0" step="0.01" />
+                    <input type="number" placeholder={`Amount (${currencyInfo.symbol})`} value={txForm.amount} onChange={(e) => setTxForm((p) => ({ ...p, amount: e.target.value }))} className="tx-input" min="0" step="0.01" />
                     <div className="tx-category-row">
                       {!showNewCategory && (
                         <select value={txForm.category} onChange={(e) => setTxForm((p) => ({ ...p, category: e.target.value }))} className="tx-select">
@@ -218,11 +223,7 @@ export const Transactions = () => {
                           <button type="button" className="tx-submit tx-submit--sm" onClick={handleAddCategory}>Add</button>
                         </>
                       )}
-                      <button
-                        type="button"
-                        className={`tx-toggle-btn ${showNewCategory ? "tx-toggle-btn--open" : ""}`}
-                        onClick={() => setShowNewCategory(!showNewCategory)}
-                      >
+                      <button type="button" className={`tx-toggle-btn ${showNewCategory ? "tx-toggle-btn--open" : ""}`} onClick={() => setShowNewCategory(!showNewCategory)}>
                         <span className="tx-toggle-btn__icon">+</span>
                       </button>
                     </div>
@@ -236,11 +237,11 @@ export const Transactions = () => {
                   <div className="tx-form">
                     <select value={showCustomService ? "__custom" : spForm.preset} onChange={(e) => handlePresetSelect(e.target.value)} className="tx-select">
                       <option value="" disabled>Select a service...</option>
-                      {PRESET_SERVICES.map((s) => <option key={s.name} value={s.name}>{s.name} — £{s.amount}</option>)}
+                      {PRESET_SERVICES.map((s) => <option key={s.name} value={s.name}>{s.name} — {currencyInfo.symbol}{s.amount}</option>)}
                       <option value="__custom">+ Custom service</option>
                     </select>
                     {showCustomService && <input type="text" placeholder="Service name" value={spForm.name} onChange={(e) => setSpForm((p) => ({ ...p, name: e.target.value }))} className="tx-input" />}
-                    <input type="number" placeholder="Amount (£)" value={spForm.amount} onChange={(e) => setSpForm((p) => ({ ...p, amount: e.target.value }))} className="tx-input" min="0" step="0.01" />
+                    <input type="number" placeholder={`Amount (${currencyInfo.symbol})`} value={spForm.amount} onChange={(e) => setSpForm((p) => ({ ...p, amount: e.target.value }))} className="tx-input" min="0" step="0.01" />
                     <select value={spForm.frequency} onChange={(e) => setSpForm((p) => ({ ...p, frequency: e.target.value }))} className="tx-select">
                       <option value="weekly">Weekly</option>
                       <option value="monthly">Monthly</option>
@@ -258,12 +259,12 @@ export const Transactions = () => {
                     <button type="button" className={`tx-toggle-btn ${showGoalForm ? "tx-toggle-btn--open" : ""}`} onClick={() => setShowGoalForm(!showGoalForm)}><span className="tx-toggle-btn__icon">+</span></button>
                   </div>
                   {showGoalForm && (
-                    <div className="tx-form" style={{ marginBottom: 14 }}>
+                    <div className="tx-form" style={{ marginBottom: 12 }}>
                       <div className="goal-icon-row">
                         {GOAL_ICONS.map((icon) => <button key={icon} type="button" className={`goal-icon-btn ${goalForm.icon === icon ? "goal-icon-btn--active" : ""}`} onClick={() => setGoalForm((p) => ({ ...p, icon }))}>{icon}</button>)}
                       </div>
                       <input type="text" placeholder="Goal name" value={goalForm.title} onChange={(e) => setGoalForm((p) => ({ ...p, title: e.target.value }))} className="tx-input" />
-                      <input type="number" placeholder="Target (£)" value={goalForm.target} onChange={(e) => setGoalForm((p) => ({ ...p, target: e.target.value }))} className="tx-input" min="0" />
+                      <input type="number" placeholder={`Target (${currencyInfo.symbol})`} value={goalForm.target} onChange={(e) => setGoalForm((p) => ({ ...p, target: e.target.value }))} className="tx-input" min="0" />
                       <button type="button" className="tx-submit" onClick={handleAddGoal}>Create Goal</button>
                     </div>
                   )}
@@ -275,13 +276,13 @@ export const Transactions = () => {
                       return (
                         <div key={g.id} className="tx-savings-item">
                           <button type="button" className="tx-savings-delete" onClick={() => handleDeleteGoal(g.id)}>×</button>
-                          <SavingsPanel title={g.title} leftAmount={`£${(g.saved || 0).toLocaleString()}`} percent={pct} target={`£${g.target.toLocaleString()}`} progressValue={pct} />
+                          <SavingsPanel title={g.title} leftAmount={formatMoney(g.saved || 0)} percent={pct} target={formatMoney(g.target)} progressValue={pct} />
                           <div className="tx-savings-actions">
                             {!done && (
                               <>
-                                <button type="button" className="goal-add-btn" onClick={() => handleAddToGoal(g.id, 10)}>+£10</button>
-                                <button type="button" className="goal-add-btn" onClick={() => handleAddToGoal(g.id, 50)}>+£50</button>
-                                <button type="button" className="goal-add-btn" onClick={() => handleAddToGoal(g.id, 100)}>+£100</button>
+                                <button type="button" className="goal-add-btn" onClick={() => handleAddToGoal(g.id, 10)}>+{currencyInfo.symbol}10</button>
+                                <button type="button" className="goal-add-btn" onClick={() => handleAddToGoal(g.id, 50)}>+{currencyInfo.symbol}50</button>
+                                <button type="button" className="goal-add-btn" onClick={() => handleAddToGoal(g.id, 100)}>+{currencyInfo.symbol}100</button>
                               </>
                             )}
                             {done && <span className="goal-done-badge">Done!</span>}
@@ -304,7 +305,7 @@ export const Transactions = () => {
                             <div className="goal-withdraw-form">
                               <input
                                 type="number"
-                                placeholder={`Max £${g.saved.toLocaleString()}`}
+                                placeholder={`Max ${formatMoney(g.saved)}`}
                                 value={withdrawAmount}
                                 onChange={(e) => setWithdrawAmount(e.target.value)}
                                 className="tx-input tx-input--sm"
@@ -356,11 +357,11 @@ export const Transactions = () => {
                 {activeTab === "transactions" && (
                   <div className="tx-card card-soft tx-list-card">
                     <div className="tx-list-header">
-                      <h3 className="tx-card__title" style={{ margin: 0 }}>All Transactions</h3>
+                      <h3 className="tx-card__title">All Transactions</h3>
                       <input type="text" placeholder="Search transactions..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="tx-input tx-search-input" />
                     </div>
                     {sortedTx.length === 0 ? (
-                      <p className="tx-empty">{searchQuery ? "No transactions found." : "No transactions yet. Add your first one!"}</p>
+                      <p className="tx-empty">No transactions found.</p>
                     ) : (
                       <div className="tx-list">
                         {sortedTx.map((tx) => (
@@ -373,7 +374,7 @@ export const Transactions = () => {
                                     <input type="text" value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} className="tx-input tx-input--sm" />
                                   </div>
                                   <div className="tx-row-edit__field">
-                                    <label className="tx-field-label">Amount (£)</label>
+                                    <label className="tx-field-label">Amount ({currencyInfo.symbol})</label>
                                     <input type="number" value={editForm.amount} onChange={(e) => setEditForm((p) => ({ ...p, amount: e.target.value }))} className="tx-input tx-input--sm" min="0" step="0.01" />
                                   </div>
                                   <div className="tx-row-edit__field">
@@ -397,7 +398,7 @@ export const Transactions = () => {
                                   <span className="tx-row__name">{tx.name}</span>
                                   <span className="tx-row__meta">{tx.category} · {formatDate(tx.date)} · {formatTime(tx.date)}</span>
                                 </div>
-                                <span className={`tx-row__amount tx-row__amount--${tx.type}`}>{tx.type === "expense" ? "-" : "+"}£{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span className={`tx-row__amount tx-row__amount--${tx.type}`}>{tx.type === "expense" ? "-" : "+"}{formatCurrencyFixed(tx.amount)}</span>
                                 <div className="tx-row__actions">
                                   <button className="tx-row-btn" onClick={() => handleStartEdit(tx)}>Edit</button>
                                   <button className="tx-row-btn tx-row-btn--del" onClick={() => handleDeleteTx(tx.id)}>×</button>
@@ -414,9 +415,11 @@ export const Transactions = () => {
                 {activeTab === "scheduled" && (
                   <div className="tx-card card-soft tx-list-card">
                     <h3 className="tx-card__title">All Scheduled Payments</h3>
-                    {scheduled.length === 0 ? <p className="tx-empty">No scheduled payments yet.</p> : (
+                    {scheduled.length === 0 ? (
+                      <p className="tx-empty">No scheduled payments.</p>
+                    ) : (
                       <>
-                        <div className="sp-total">Total monthly: <strong>£{totalScheduled.toFixed(2)}</strong></div>
+                        <div className="sp-total">Total monthly: <strong>{formatCurrencyFixed(totalScheduled)}</strong></div>
                         <div className="tx-list">
                           {scheduled.map((sp) => (
                             <div key={sp.id} className="tx-row">
@@ -428,7 +431,7 @@ export const Transactions = () => {
                                   {sp.startDate && ` · since ${formatDate(sp.startDate)}`}
                                 </span>
                               </div>
-                              <span className="tx-row__amount tx-row__amount--expense">£{sp.amount.toFixed(2)}</span>
+                              <span className="tx-row__amount tx-row__amount--expense">{formatCurrencyFixed(sp.amount)}</span>
                               <div className="tx-row__actions"><button className="tx-row-btn tx-row-btn--del" onClick={() => handleDeleteScheduled(sp.id)}>×</button></div>
                             </div>
                           ))}

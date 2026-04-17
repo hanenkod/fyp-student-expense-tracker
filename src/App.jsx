@@ -5,6 +5,7 @@ import { Login } from "./components/Login";
 import { Onboarding } from "./components/Onboarding";
 import { Profile } from "./components/Profile";
 import { Transactions } from "./components/Transactions";
+import { Settings } from "./components/Settings";
 import {
   AuthOnlyRoute,
   ProtectedDashboardRoute,
@@ -93,7 +94,7 @@ function App() {
           path="/settings"
           element={
             <ProtectedDashboardRoute>
-              <PlaceholderPage title="Settings" />
+              <Settings />
             </ProtectedDashboardRoute>
           }
         />

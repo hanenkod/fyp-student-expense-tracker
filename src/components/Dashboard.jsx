@@ -6,6 +6,7 @@ import { SavingsPanel } from "./SavingsPanel";
 import { SafeToSpendCard } from "./SafeToSpendCard";
 import { MetricCard } from "./MetricCard";
 import { TrendArrow } from "./TrendArrow";
+import { useSettings } from "./SettingsContext";
 
 import "../styles/style.css";
 import "../styles/dashboard.css";
@@ -19,18 +20,15 @@ const getStoredJSON = (key) => {
   }
 };
 
-const formatCurrency = (value) =>
-  `£${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-
-const formatCurrencyFixed = (value) =>
-  `£${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
 const formatPercent = (value) => `${Math.round(value)}%`;
 
 const barColors = ["bar--lilac", "bar--indigo", "bar--accent", "bar--deep"];
 
 export const Dashboard = () => {
   const navigate = useNavigate();
+  const { formatMoney, currencyInfo } = useSettings();
+  const formatCurrency = formatMoney;
+  const formatCurrencyFixed = (v) => formatMoney(v, { minFractionDigits: 2, maxFractionDigits: 2 });
 
   const onboardingData = getStoredJSON("pockeOnboarding") || {};
   const userData = getStoredJSON("pockeUser") || {};
@@ -66,17 +64,13 @@ export const Dashboard = () => {
 
   const remainingPercent = income > 0 ? (remainingBudget / income) * 100 : 0;
   const displayIncome = totalIncome > 0 ? totalIncome : income;
-
-  // Savings rate: what % of income is not spent (0-100, capped)
-  const savingsRate = displayIncome > 0 ? Math.max(0, Math.min(100, ((displayIncome - totalExpenses) / displayIncome) * 100)) : 0;
-
-  // Expense ratio: what % of income went to expenses (can exceed 100 when overspent)
+  const incomeCoveragePercent =
+    totalExpenses > 0 ? (displayIncome / totalExpenses) * 100 : displayIncome > 0 ? 100 : 0;
   const expensePercent = income > 0 ? (totalExpenses / income) * 100 : 0;
-  const expensePercentDisplay = Math.min(999, expensePercent);
 
   const balancePositive = remainingBudget > 0;
-  const savingsPositive = savingsRate >= 20;
-  const expensePositive = expensePercent <= 100;
+  const incomeCoveragePositive = displayIncome >= totalExpenses;
+  const expensePositive = totalExpenses <= income;
 
   let paceStatus = "positive";
   let paceText = "Healthy plan";
@@ -97,9 +91,9 @@ export const Dashboard = () => {
   const totalSaved = savingsGoals.reduce((s, g) => s + (g.saved || 0), 0);
   const savingsPanelData = savingsGoals.slice(0, 2).map((g) => ({
     title: g.title,
-    leftAmount: `£${(g.saved || 0).toLocaleString()}`,
+    leftAmount: formatCurrency(g.saved || 0),
     percent: g.target > 0 ? Math.round((g.saved / g.target) * 100) : 0,
-    target: `£${g.target.toLocaleString()}`,
+    target: formatCurrency(g.target),
     progressValue: g.target > 0 ? Math.round((g.saved / g.target) * 100) : 0,
   }));
 
@@ -186,7 +180,7 @@ export const Dashboard = () => {
                           <span className="dot" style={{ background: t.type === "income" ? "#5dbb63" : "#555" }} />
                           <span className="row-title">{t.name}</span>
                           <span className="row-amount" style={{ color: t.type === "income" ? "#5dbb63" : "var(--text-main)" }}>
-                            {t.type === "expense" ? "-" : "+"}£{t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {t.type === "expense" ? "-" : "+"}{formatCurrencyFixed(t.amount)}
                           </span>
                         </li>
                       ))}
@@ -202,7 +196,7 @@ export const Dashboard = () => {
                     <div className="card-title">Savings</div>
                     <div className="stack-5">
                       <div className="card-muted">Total Savings</div>
-                      <div className="card-value">£{totalSaved.toLocaleString()}</div>
+                      <div className="card-value">{formatCurrency(totalSaved)}</div>
                     </div>
                   </div>
                   <div className="card-header__action">
@@ -230,9 +224,9 @@ export const Dashboard = () => {
                     title="Total Income"
                     value={formatCurrency(displayIncome)}
                     footer={
-                      <div className={`chip ${savingsPositive ? "chip-positive" : "chip-negative"}`}>
-                        <span>{formatPercent(savingsRate)} saved</span>
-                        <TrendArrow direction={savingsPositive ? "up" : "down"} />
+                      <div className={`chip ${incomeCoveragePositive ? "chip-positive" : "chip-negative"}`}>
+                        <span>{formatPercent(incomeCoveragePercent)} cover</span>
+                        <TrendArrow direction={incomeCoveragePositive ? "up" : "down"} />
                       </div>
                     }
                   />
@@ -242,7 +236,7 @@ export const Dashboard = () => {
                     value={formatCurrency(totalExpenses)}
                     footer={
                       <div className={`chip ${expensePositive ? "chip-positive" : "chip-negative"}`}>
-                        <span>{formatPercent(expensePercentDisplay)} of income</span>
+                        <span>{formatPercent(expensePercent)} of income</span>
                         <TrendArrow direction={expensePositive ? "up" : "down"} />
                       </div>
                     }
@@ -267,7 +261,7 @@ export const Dashboard = () => {
                           <li className="row" key={p.id || p.name}>
                             <span className="dot" />
                             <span className="row-title">{p.name}</span>
-                            <span className="row-amount">£{p.amount.toFixed(2)}</span>
+                            <span className="row-amount">{formatCurrencyFixed(p.amount)}</span>
                           </li>
                         ))}
                       </ul>
@@ -288,10 +282,10 @@ export const Dashboard = () => {
                 <CardContent className="card-content--chart">
                   <div className="chart-layout">
                     <div className="chart-ylabels">
-                      <span>£{maxLabel}</span>
-                      <span>£{Math.round(maxLabel * 0.66)}</span>
-                      <span>£{Math.round(maxLabel * 0.33)}</span>
-                      <span>£0</span>
+                      <span>{currencyInfo.symbol}{maxLabel}</span>
+                      <span>{currencyInfo.symbol}{Math.round(maxLabel * 0.66)}</span>
+                      <span>{currencyInfo.symbol}{Math.round(maxLabel * 0.33)}</span>
+                      <span>{currencyInfo.symbol}0</span>
                     </div>
                     <BarChartMock bars={trendBars} />
                   </div>
