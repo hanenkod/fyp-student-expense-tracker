@@ -32,9 +32,9 @@
 
 .whatif-card__title {
   margin: 0 0 14px;
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--text-main);
 }
 
@@ -44,7 +44,7 @@
 
 .whatif-card__subtitle {
   margin: -8px 0 14px;
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   color: var(--text-soft);
 }
@@ -92,7 +92,7 @@
 }
 
 .whatif-type-btn__label {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-main);
@@ -101,7 +101,7 @@
 
 .whatif-type-hint {
   margin: 0 0 14px;
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   color: var(--text-soft);
   font-style: italic;
@@ -121,13 +121,13 @@
   padding: 0 12px;
   border: 1.5px solid rgba(44, 42, 74, 0.12);
   border-radius: 8px;
-  background: var(--bg-white);
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  background-color: var(--bg-white);
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   color: var(--text-main);
   box-sizing: border-box;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .whatif-input:focus,
@@ -139,6 +139,8 @@
   padding-right: 32px;
   cursor: pointer;
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
@@ -150,7 +152,7 @@
   border-radius: 10px;
   background: var(--color-accent);
   color: #ffffff;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -173,7 +175,7 @@
   border-radius: 6px;
   background: transparent;
   color: #e05252;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -189,7 +191,7 @@
   margin: 0;
   padding: 20px;
   text-align: center;
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   color: var(--text-soft);
   font-style: italic;
@@ -235,27 +237,27 @@
 }
 
 .whatif-list-item__label {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-main);
 }
 
 .whatif-list-item__meta {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   color: var(--text-soft);
 }
 
 .whatif-list-item__amount {
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 800;
   white-space: nowrap;
 }
 
 .whatif-amt--positive {
-  color: #2f7a3d;
+  color: #22863a;
 }
 
 .whatif-amt--negative {
@@ -299,7 +301,7 @@
 }
 
 .sts-cell__label {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-soft);
@@ -308,15 +310,15 @@
 }
 
 .sts-cell__value {
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 26px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--text-main);
   line-height: 1.1;
 }
 
 .sts-cell__meta {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   color: var(--text-soft);
 }
@@ -339,19 +341,19 @@
 }
 
 .sts-delta__label {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   color: var(--text-muted);
 }
 
 .sts-delta__value {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
 }
 
 .sts-delta__value--positive {
-  color: #2f7a3d;
+  color: #22863a;
 }
 
 .sts-delta__value--negative {
@@ -380,7 +382,7 @@
 }
 
 .compare-col__label {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-soft);
@@ -393,14 +395,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   color: var(--text-muted);
 }
 
 .compare-row strong {
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
-  font-weight: 900;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
+  font-weight: 800;
   color: var(--text-main);
   font-size: 13px;
 }
@@ -440,7 +442,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
+  font-weight: 800;
   font-size: 14px;
 }
 
@@ -455,7 +457,7 @@
 }
 
 .warning-card__text {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   color: var(--text-main);
   line-height: 1.5;
@@ -510,14 +512,14 @@
 }
 
 .goal-impact-item__title {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-main);
 }
 
 .goal-impact-item__delay {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
 }
 
@@ -526,7 +528,7 @@
 }
 
 .goal-impact-item__delay--good {
-  color: #2f7a3d;
+  color: #22863a;
 }
 
 .goal-impact-item__delay--neutral {
@@ -549,15 +551,15 @@
 
 .whatif-empty-state__title {
   margin: 0 0 8px;
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--text-main);
 }
 
 .whatif-empty-state__text {
   margin: 0;
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   color: var(--text-soft);
   line-height: 1.6;
@@ -577,7 +579,7 @@
 :root[data-theme="dark"] .whatif-type-btn,
 :root[data-theme="dark"] .whatif-input,
 :root[data-theme="dark"] .whatif-select {
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   border-color: rgba(255, 255, 255, 0.12);
   color: var(--text-main);
 }
@@ -640,7 +642,7 @@
 :root[data-theme="dark"] .whatif-amt--positive,
 :root[data-theme="dark"] .sts-delta__value--positive,
 :root[data-theme="dark"] .goal-impact-item__delay--good {
-  color: #86d490;
+  color: #4ad66d;
 }
 
 :root[data-theme="dark"] .whatif-amt--negative,

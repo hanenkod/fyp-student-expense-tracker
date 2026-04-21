@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { useSettings } from "./SettingsContext";
+import { useToast } from "./ToastContext";
 import "../styles/style.css";
 import "../styles/profile.css";
 
@@ -273,6 +274,7 @@ const generateTips = (income, expenses, transactions, onboardingData, formatMone
 export const Profile = () => {
   const navigate = useNavigate();
   const { formatMoney, currencyInfo } = useSettings();
+  const { showToast } = useToast();
   const userData = getStoredJSON("pockeUser");
   const onboardingData = getStoredJSON("pockeOnboarding");
 
@@ -280,10 +282,20 @@ export const Profile = () => {
   const [formData, setFormData] = useState({
     name: userData?.name || "",
     email: userData?.email || "",
+    income: String(onboardingData?.income || ""),
   });
   const [errors, setErrors] = useState({});
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Password change state
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    current: "",
+    new: "",
+    confirm: "",
+  });
+  const [passwordErrors, setPasswordErrors] = useState({});
 
   const handleLogout = () => {
     localStorage.removeItem("pockeSession");
@@ -342,25 +354,67 @@ export const Profile = () => {
       name: formData.name.trim(),
       email: formData.email.trim(),
     };
-
     localStorage.setItem("pockeUser", JSON.stringify(updatedUser));
+
+    // Save income to onboarding
+    const newIncome = Number(formData.income);
+    if (Number.isFinite(newIncome) && newIncome >= 0) {
+      const updatedOnboarding = { ...(onboardingData || {}), income: newIncome };
+      localStorage.setItem("pockeOnboarding", JSON.stringify(updatedOnboarding));
+    }
+
     setIsEditing(false);
     setErrors({});
     setSaveSuccess(true);
+    showToast("Profile updated", { type: "success" });
   };
 
   const handleCancel = () => {
     setFormData({
       name: userData?.name || "",
       email: userData?.email || "",
+      income: String(onboardingData?.income || ""),
     });
     setErrors({});
     setIsEditing(false);
   };
 
+  // Password change handlers
+  const validatePassword = () => {
+    const errs = {};
+    if (!passwordForm.current) errs.current = "Current password is required";
+    else if (userData?.password && passwordForm.current !== userData.password) {
+      errs.current = "Current password is incorrect";
+    }
+    if (!passwordForm.new) errs.new = "New password is required";
+    else if (passwordForm.new.length < 6) errs.new = "Must be at least 6 characters";
+    if (passwordForm.new !== passwordForm.confirm) {
+      errs.confirm = "Passwords do not match";
+    }
+    return errs;
+  };
+
+  const handleChangePassword = () => {
+    const errs = validatePassword();
+    if (Object.keys(errs).length > 0) {
+      setPasswordErrors(errs);
+      return;
+    }
+    const updatedUser = { ...userData, password: passwordForm.new };
+    localStorage.setItem("pockeUser", JSON.stringify(updatedUser));
+    setPasswordForm({ current: "", new: "", confirm: "" });
+    setPasswordErrors({});
+    setShowPasswordChange(false);
+    showToast("Password changed", { type: "success" });
+  };
+
+  const handleCancelPassword = () => {
+    setPasswordForm({ current: "", new: "", confirm: "" });
+    setPasswordErrors({});
+    setShowPasswordChange(false);
+  };
+
   const income = Number(onboardingData?.income || 0);
-  const expenses = Number(onboardingData?.expenses || 0);
-  const balance = Math.max(income - expenses, 0);
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -399,6 +453,10 @@ export const Profile = () => {
   const monthlyEarned = thisMonthTx
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+  // Use real transaction data for balance/expenses (not stale onboarding)
+  const expenses = monthlySpent;
+  const balance = income + monthlyEarned - monthlySpent;
 
   const thisMonthCount = thisMonthTx.length;
   const totalTransactions = transactions.length;
@@ -689,19 +747,101 @@ export const Profile = () => {
                       <label className="profile-field__label">
                         Monthly Income
                       </label>
-                      <p className="profile-field__value">
-                        {formatMoney(income)}
-                      </p>
+                      {isEditing ? (
+                        <>
+                          <input
+                            type="number"
+                            name="income"
+                            value={formData.income}
+                            onChange={handleChange}
+                            className="profile-field__input"
+                            min="0"
+                            step="0.01"
+                            placeholder="0"
+                          />
+                        </>
+                      ) : (
+                        <p className="profile-field__value">
+                          {formatMoney(income)}
+                        </p>
+                      )}
                     </div>
+                  </div>
 
-                    <div className="profile-field">
-                      <label className="profile-field__label">
-                        Monthly Expenses
-                      </label>
-                      <p className="profile-field__value">
-                        {formatMoney(expenses)}
-                      </p>
-                    </div>
+                  {/* Password change */}
+                  <div className="profile-password">
+                    {!showPasswordChange ? (
+                      <button
+                        type="button"
+                        className="profile-password__toggle-btn"
+                        onClick={() => setShowPasswordChange(true)}
+                      >
+                        Change password
+                      </button>
+                    ) : (
+                      <div className="profile-password__form">
+                        <h4 className="profile-password__title">Change password</h4>
+
+                        <div className="profile-field">
+                          <label className="profile-field__label">Current password</label>
+                          <input
+                            type="password"
+                            value={passwordForm.current}
+                            onChange={(e) => setPasswordForm((p) => ({ ...p, current: e.target.value }))}
+                            className={`profile-field__input ${passwordErrors.current ? "profile-field__input--error" : ""}`}
+                            autoComplete="current-password"
+                          />
+                          {passwordErrors.current && (
+                            <p className="profile-field__error">{passwordErrors.current}</p>
+                          )}
+                        </div>
+
+                        <div className="profile-field">
+                          <label className="profile-field__label">New password</label>
+                          <input
+                            type="password"
+                            value={passwordForm.new}
+                            onChange={(e) => setPasswordForm((p) => ({ ...p, new: e.target.value }))}
+                            className={`profile-field__input ${passwordErrors.new ? "profile-field__input--error" : ""}`}
+                            autoComplete="new-password"
+                          />
+                          {passwordErrors.new && (
+                            <p className="profile-field__error">{passwordErrors.new}</p>
+                          )}
+                        </div>
+
+                        <div className="profile-field">
+                          <label className="profile-field__label">Confirm new password</label>
+                          <input
+                            type="password"
+                            value={passwordForm.confirm}
+                            onChange={(e) => setPasswordForm((p) => ({ ...p, confirm: e.target.value }))}
+                            className={`profile-field__input ${passwordErrors.confirm ? "profile-field__input--error" : ""}`}
+                            autoComplete="new-password"
+                          />
+                          {passwordErrors.confirm && (
+                            <p className="profile-field__error">{passwordErrors.confirm}</p>
+                          )}
+                        </div>
+
+                        <div className="profile-password__actions">
+                          <button
+                            type="button"
+                            className="profile-password__btn profile-password__btn--save"
+                            onClick={handleChangePassword}
+                          >
+                            Update password
+                          </button>
+                          <button
+                            type="button"
+                            className="profile-password__btn profile-password__btn--cancel"
+                            onClick={handleCancelPassword}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

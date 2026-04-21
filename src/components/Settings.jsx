@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSettings } from "./SettingsContext";
+import { useToast } from "./ToastContext";
 import "../styles/style.css";
 import "../styles/settings.css";
 
@@ -42,11 +43,17 @@ const txToCSV = (transactions) => {
 
 export const Settings = () => {
   const { settings, updateSetting, currencies } = useSettings();
-  const [exportFeedback, setExportFeedback] = useState("");
+  const { showToast } = useToast();
 
-  const showFeedback = (msg) => {
-    setExportFeedback(msg);
-    setTimeout(() => setExportFeedback(""), 2500);
+  const handleThemeChange = (theme) => {
+    updateSetting("theme", theme);
+    showToast(`Switched to ${theme} theme`, { type: "success" });
+  };
+
+  const handleCurrencyChange = (code) => {
+    updateSetting("currency", code);
+    const name = currencies[code]?.label || code;
+    showToast(`Currency changed to ${name}`, { type: "success" });
   };
 
   const handleExportJSON = () => {
@@ -63,19 +70,19 @@ export const Settings = () => {
     };
     const filename = `pocke-backup-${new Date().toISOString().split("T")[0]}.json`;
     triggerDownload(JSON.stringify(data, null, 2), filename, "application/json");
-    showFeedback("Backup downloaded as JSON");
+    showToast("Backup downloaded as JSON", { type: "success" });
   };
 
   const handleExportCSV = () => {
     const transactions = getStoredJSON("pockeTransactions") || [];
     if (transactions.length === 0) {
-      showFeedback("No transactions to export");
+      showToast("No transactions to export", { type: "warning" });
       return;
     }
     const csv = txToCSV(transactions);
     const filename = `pocke-transactions-${new Date().toISOString().split("T")[0]}.csv`;
     triggerDownload(csv, filename, "text/csv");
-    showFeedback(`Exported ${transactions.length} transactions`);
+    showToast(`Exported ${transactions.length} transactions`, { type: "success" });
   };
 
   const txCount = (getStoredJSON("pockeTransactions") || []).length;
@@ -118,7 +125,7 @@ export const Settings = () => {
                     <button
                       type="button"
                       className={`theme-toggle__btn ${settings.theme === "light" ? "theme-toggle__btn--active" : ""}`}
-                      onClick={() => updateSetting("theme", "light")}
+                      onClick={() => handleThemeChange("light")}
                     >
                       <span className="theme-toggle__icon">☀</span>
                       <span>Light</span>
@@ -126,7 +133,7 @@ export const Settings = () => {
                     <button
                       type="button"
                       className={`theme-toggle__btn ${settings.theme === "dark" ? "theme-toggle__btn--active" : ""}`}
-                      onClick={() => updateSetting("theme", "dark")}
+                      onClick={() => handleThemeChange("dark")}
                     >
                       <span className="theme-toggle__icon">☾</span>
                       <span>Dark</span>
@@ -154,7 +161,7 @@ export const Settings = () => {
                         key={c.code}
                         type="button"
                         className={`currency-btn ${settings.currency === c.code ? "currency-btn--active" : ""}`}
-                        onClick={() => updateSetting("currency", c.code)}
+                        onClick={() => handleCurrencyChange(c.code)}
                       >
                         <span className="currency-btn__symbol">{c.symbol}</span>
                         <span className="currency-btn__code">{c.code}</span>
@@ -216,9 +223,6 @@ export const Settings = () => {
                   </button>
                 </div>
 
-                {exportFeedback && (
-                  <div className="export-feedback">{exportFeedback}</div>
-                )}
               </section>
             </div>
           </main>

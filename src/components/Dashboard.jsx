@@ -151,8 +151,11 @@ export const Dashboard = () => {
               <SafeToSpendCard
                 title="Safe to Spend Today"
                 amount={formatCurrencyFixed(safeToSpend)}
-                actionText="How it's calculated?"
-                onAction={() => {}}
+                income={income}
+                expenses={totalExpenses}
+                currentBalance={currentBalance}
+                daysLeft={remainingDays}
+                currencySymbol={currencyInfo.symbol}
               />
               <MetricCard
                 className="card--sm metric-accent"
@@ -186,9 +189,9 @@ export const Dashboard = () => {
                     <ul className="list">
                       {recentTx.map((t) => (
                         <li className="row" key={t.id}>
-                          <span className="dot" style={{ background: t.type === "income" ? "#5dbb63" : "#555" }} />
+                          <span className={`dot dot--${(t.category || "other").toLowerCase().replace(/\s+/g, "-")}`} />
                           <span className="row-title">{t.name}</span>
-                          <span className="row-amount" style={{ color: t.type === "income" ? "#5dbb63" : "var(--text-main)" }}>
+                          <span className={`row-amount row-amount--${t.type}`}>
                             {t.type === "expense" ? "-" : "+"}{formatCurrencyFixed(t.amount)}
                           </span>
                         </li>
@@ -268,7 +271,7 @@ export const Dashboard = () => {
                       <ul className="list">
                         {scheduledPayments.slice(0, 3).map((p) => (
                           <li className="row" key={p.id || p.name}>
-                            <span className="dot" />
+                            <span className="dot dot--subscriptions" />
                             <span className="row-title">{p.name}</span>
                             <span className="row-amount">{formatCurrencyFixed(p.amount)}</span>
                           </li>

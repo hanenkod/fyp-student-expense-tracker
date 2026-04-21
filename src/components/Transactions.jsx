@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { SavingsPanel } from "./SavingsPanel";
 import { useSettings } from "./SettingsContext";
+import { useToast } from "./ToastContext";
 import "../styles/style.css";
 import "../styles/transactions.css";
 
@@ -47,6 +48,7 @@ const formatTime = (iso) => {
 
 export const Transactions = () => {
   const { formatMoney, currencyInfo } = useSettings();
+  const { showToast } = useToast();
   const formatCurrencyFixed = (v) => formatMoney(v, { minFractionDigits: 2, maxFractionDigits: 2 });
 
   const [transactions, setTransactions] = useState(() => getStoredJSON("pockeTransactions") || []);
@@ -104,9 +106,13 @@ export const Transactions = () => {
     if (!txForm.name.trim() || !txForm.amount || Number(txForm.amount) <= 0) return;
     saveTx([{ id: `tx_${Date.now()}`, type: txForm.type, name: txForm.name.trim(), category: txForm.category, amount: Number(txForm.amount), date: txForm.date }, ...transactions]);
     setTxForm({ type: txForm.type, name: "", amount: "", category: txForm.type === "expense" ? "Food" : "Salary", date: new Date().toISOString().slice(0, 16) });
+    showToast(`${txForm.type === "expense" ? "Expense" : "Income"} added: ${formatMoney(Number(txForm.amount))}`, { type: "success" });
   };
 
-  const handleDeleteTx = (id) => saveTx(transactions.filter((t) => t.id !== id));
+  const handleDeleteTx = (id) => {
+    saveTx(transactions.filter((t) => t.id !== id));
+    showToast("Transaction deleted", { type: "info" });
+  };
 
   const handleStartEdit = (tx) => {
     setEditingTx(tx.id);
@@ -117,6 +123,7 @@ export const Transactions = () => {
     if (!editForm.name.trim() || Number(editForm.amount) <= 0) return;
     saveTx(transactions.map((t) => t.id === id ? { ...t, name: editForm.name.trim(), amount: Number(editForm.amount), category: editForm.category, type: editForm.type } : t));
     setEditingTx(null);
+    showToast("Transaction updated", { type: "success" });
   };
 
   const handlePresetSelect = (preset) => {
@@ -131,15 +138,21 @@ export const Transactions = () => {
     if (!spForm.name.trim() || !spForm.amount || Number(spForm.amount) <= 0) return;
     saveSp([...scheduled, { id: `sp_${Date.now()}`, name: spForm.name.trim(), amount: Number(spForm.amount), frequency: spForm.frequency, startDate: spForm.startDate }]);
     setSpForm({ preset: "", name: "", amount: "", frequency: "monthly", startDate: new Date().toISOString().split("T")[0] }); setShowCustomService(false);
+    showToast(`Subscription added: ${spForm.name.trim()}`, { type: "success" });
   };
 
-  const handleDeleteScheduled = (id) => saveSp(scheduled.filter((s) => s.id !== id));
+  const handleDeleteScheduled = (id) => {
+    const sp = scheduled.find((s) => s.id === id);
+    saveSp(scheduled.filter((s) => s.id !== id));
+    if (sp) showToast(`Subscription removed: ${sp.name}`, { type: "info" });
+  };
 
   const handleAddGoal = () => {
     const target = parseFloat(goalForm.target);
     if (!goalForm.title.trim() || isNaN(target) || target <= 0) return;
     saveGoals([...goals, { id: `sg_${Date.now()}`, title: goalForm.title.trim(), icon: goalForm.icon, target, saved: 0, color: GOAL_COLORS[goals.length % GOAL_COLORS.length] }]);
     setGoalForm({ title: "", target: "", icon: "🎯" }); setShowGoalForm(false);
+    showToast(`New goal created: ${goalForm.title.trim()}`, { type: "success" });
   };
 
   const handleAddToGoal = (id, amt) => {
@@ -152,6 +165,13 @@ export const Transactions = () => {
     const newTx = { id: `tx_${Date.now()}`, type: "expense", name: `Savings: ${goal.title}`, category: "Savings", amount: actualAmt, date: nowIso, source: "savings", goalId: id };
     saveTx([newTx, ...transactions]);
     saveGoals(goals.map((g) => g.id === id ? { ...g, saved: g.saved + actualAmt } : g));
+
+    const newSaved = goal.saved + actualAmt;
+    if (newSaved >= goal.target) {
+      showToast(`🎉 Goal reached: ${goal.title}!`, { type: "success", duration: 4000 });
+    } else {
+      showToast(`${formatMoney(actualAmt)} added to ${goal.title}`, { type: "success" });
+    }
   };
 
   const handleWithdrawFromGoal = (id, amt) => {
@@ -162,6 +182,7 @@ export const Transactions = () => {
     const newTx = { id: `tx_${Date.now()}`, type: "income", name: `Withdraw: ${goal.title}`, category: "Savings", amount: actualAmt, date: nowIso, source: "savings", goalId: id };
     saveTx([newTx, ...transactions]);
     saveGoals(goals.map((g) => g.id === id ? { ...g, saved: g.saved - actualAmt } : g));
+    showToast(`${formatMoney(actualAmt)} withdrawn from ${goal.title}`, { type: "info" });
   };
 
   const handleDeleteGoal = (id) => {
@@ -173,6 +194,7 @@ export const Transactions = () => {
       saveTx([newTx, ...transactions]);
     }
     saveGoals(goals.filter((g) => g.id !== id));
+    showToast(`Goal deleted: ${goal.title}${goal.saved > 0 ? ` (${formatMoney(goal.saved)} refunded)` : ""}`, { type: "info" });
   };
 
   const sortedTx = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).filter((t) => {
@@ -393,7 +415,7 @@ export const Transactions = () => {
                               </div>
                             ) : (
                               <>
-                                <div className={`tx-row__dot tx-row__dot--${tx.type}`} />
+                                <div className={`tx-row__dot tx-row__dot--${(tx.category || "other").toLowerCase().replace(/\s+/g, "-")}`} />
                                 <div className="tx-row__info">
                                   <span className="tx-row__name">{tx.name}</span>
                                   <span className="tx-row__meta">{tx.category} · {formatDate(tx.date)} · {formatTime(tx.date)}</span>
@@ -423,7 +445,7 @@ export const Transactions = () => {
                         <div className="tx-list">
                           {scheduled.map((sp) => (
                             <div key={sp.id} className="tx-row">
-                              <div className="tx-row__dot tx-row__dot--expense" />
+                              <div className="tx-row__dot tx-row__dot--subscriptions" />
                               <div className="tx-row__info">
                                 <span className="tx-row__name">{sp.name}</span>
                                 <span className="tx-row__meta">

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSettings } from "./SettingsContext";
+import { useToast } from "./ToastContext";
 import "../styles/style.css";
 import "../styles/whatif.css";
 
@@ -31,6 +32,7 @@ const getDayOfMonth = () => new Date().getDate();
 
 export const WhatIf = () => {
   const { formatMoney, currencyInfo } = useSettings();
+  const { showToast } = useToast();
 
   const onboardingData = getStoredJSON("pockeOnboarding") || {};
   const allTransactions = getStoredJSON("pockeTransactions") || [];
@@ -210,20 +212,32 @@ export const WhatIf = () => {
       const sub = scheduledPayments.find((sp) => sp.id === draft.targetSubId);
       if (!sub) return;
       setScenarios([...scenarios, { id: `sc_${Date.now()}`, type: draft.type, label: `Cancel ${sub.name}`, amount: sub.amount, targetSubId: sub.id }]);
+      showToast(`Scenario added: Cancel ${sub.name}`, { type: "success" });
     } else {
-      if (!draft.amount || Number(draft.amount) <= 0) return;
+      const amt = Number(draft.amount);
+      if (!draft.amount || amt === 0) return;
+      if (draft.type !== "income_change" && amt <= 0) return;
       const labels = {
         purchase: draft.label.trim() || "One-time purchase",
         recurring: draft.label.trim() || `Recurring (${draft.frequency})`,
-        income_change: draft.label.trim() || (Number(draft.amount) >= 0 ? "Income gain" : "Income loss"),
+        income_change: draft.label.trim() || (amt >= 0 ? "Income gain" : "Income loss"),
       };
-      setScenarios([...scenarios, { id: `sc_${Date.now()}`, type: draft.type, label: labels[draft.type], amount: Number(draft.amount), frequency: draft.frequency }]);
+      setScenarios([...scenarios, { id: `sc_${Date.now()}`, type: draft.type, label: labels[draft.type], amount: amt, frequency: draft.frequency }]);
+      showToast(`Scenario added: ${labels[draft.type]}`, { type: "success" });
     }
     setDraft({ type: draft.type, label: "", amount: "", frequency: "weekly", targetSubId: "" });
   };
 
-  const handleRemoveScenario = (id) => setScenarios(scenarios.filter((s) => s.id !== id));
-  const handleClearAll = () => setScenarios([]);
+  const handleRemoveScenario = (id) => {
+    const s = scenarios.find((s) => s.id === id);
+    setScenarios(scenarios.filter((sc) => sc.id !== id));
+    if (s) showToast(`Scenario removed`, { type: "info" });
+  };
+
+  const handleClearAll = () => {
+    setScenarios([]);
+    showToast("All scenarios cleared", { type: "info" });
+  };
 
   const scenarioTypeInfo = SCENARIO_TYPES.find((t) => t.id === draft.type);
 

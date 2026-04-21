@@ -1,13 +1,42 @@
-@import url("https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
 
 :root {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  color-scheme: light;
+
+  /* Brand colors — centralised for easy theming */
+  --color-success: #2fae52;
+  --color-success-soft: #d4f4dd;
+  --color-success-dark: #22863a;
+  --color-danger: #e05252;
+  --color-danger-soft: #fef2f2;
+  --color-warning: #f47f42;
+  --color-warning-soft: #fff7ed;
+
+  /* Category palette — used for transaction/subscription dots */
+  --cat-food: #f47f42;
+  --cat-transport: #3d9be9;
+  --cat-entertainment: #e05298;
+  --cat-bills: #7a7486;
+  --cat-shopping: #907ad6;
+  --cat-education: #4dbabf;
+  --cat-health: #2fae52;
+  --cat-subscriptions: #6b6aa3;
+  --cat-savings: #2fae52;
+  --cat-salary: #2fae52;
+  --cat-freelance: #4dbabf;
+  --cat-gift: #e05298;
+  --cat-scholarship: #907ad6;
+  --cat-refund: #3d9be9;
+  --cat-investment: #f47f42;
+  --cat-other: #9391a0;
 }
 
 html, body {
@@ -17,8 +46,241 @@ html, body {
 body {
   margin: 0;
   background: #ffffff;
+  transition: background 0.25s ease;
 }
 
-#root {
-  min-height: 100%;
+:root[data-theme="dark"] body {
+  background: #0e0d1f;
+}
+
+/* ============================================================
+   GLOBAL TOAST ANIMATIONS (used only by toast notifications)
+   ============================================================ */
+
+@keyframes pockeToastIn {
+  from { opacity: 0; transform: translateX(24px) scale(0.92); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes pockeToastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: 0; transform: translateX(24px) scale(0.92); }
+}
+
+.nav-item:active {
+  transform: scale(0.92);
+}
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+  max-width: 360px;
+  width: calc(100% - 40px);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: pockeToastIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  min-width: 260px;
+}
+
+.toast--leaving {
+  animation: pockeToastOut 0.25s ease forwards;
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.toast--success .toast__icon { background: #2fae52; }
+.toast--error .toast__icon { background: #e05252; }
+.toast--warning .toast__icon { background: #f47f42; }
+.toast--info .toast__icon { background: #907ad6; }
+
+.toast__message {
+  flex: 1;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
+  font-size: 13px;
+  color: #2c2a4a;
+  line-height: 1.4;
+}
+
+.toast__close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: #9391a0;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.toast__close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #2c2a4a;
+}
+
+:root[data-theme="dark"] .toast {
+  background: #2a2847;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .toast__message {
+  color: #f2f1f5;
+}
+
+:root[data-theme="dark"] .toast__close {
+  color: #9391a0;
+}
+
+:root[data-theme="dark"] .toast__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2f1f5;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   FONT UNIFICATION
+   All legacy "Inter-*" references have been replaced with
+   "Plus Jakarta Sans" directly across CSS files.
+   ============================================================ */
+
+/* Brand logo — Dela Gothic One */
+.brand,
+.registration__logo {
+  font-family: "Dela Gothic One", system-ui, -apple-system, sans-serif !important;
+}
+
+/* ============================================================
+   CATEGORY DOT COLORS
+   tx-row__dot--{category} for coloured indicators
+   ============================================================ */
+
+.tx-row__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+:root[data-theme="dark"] .tx-row__dot {
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Map categories to palette variables */
+.tx-row__dot--food           { background: var(--cat-food); }
+.tx-row__dot--transport      { background: var(--cat-transport); }
+.tx-row__dot--entertainment  { background: var(--cat-entertainment); }
+.tx-row__dot--bills          { background: var(--cat-bills); }
+.tx-row__dot--shopping       { background: var(--cat-shopping); }
+.tx-row__dot--education      { background: var(--cat-education); }
+.tx-row__dot--health         { background: var(--cat-health); }
+.tx-row__dot--subscriptions  { background: var(--cat-subscriptions); }
+.tx-row__dot--savings        { background: var(--cat-savings); }
+.tx-row__dot--salary         { background: var(--cat-salary); }
+.tx-row__dot--freelance      { background: var(--cat-freelance); }
+.tx-row__dot--gift           { background: var(--cat-gift); }
+.tx-row__dot--scholarship    { background: var(--cat-scholarship); }
+.tx-row__dot--refund         { background: var(--cat-refund); }
+.tx-row__dot--investment     { background: var(--cat-investment); }
+.tx-row__dot--other          { background: var(--cat-other); }
+
+/* Fallback for type-based coloring (old expense/income dots) */
+.tx-row__dot--expense { background: var(--color-danger); }
+.tx-row__dot--income  { background: var(--color-success); }
+
+/* Hover animation on transaction rows */
+.tx-row:hover .tx-row__dot {
+  transform: scale(1.2);
+}
+
+/* ============================================================
+   DOT COLORS (for Dashboard recent list — .dot class)
+   ============================================================ */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cat-other);
+  transition: transform 0.2s ease;
+}
+
+.dot--food           { background: var(--cat-food); }
+.dot--transport      { background: var(--cat-transport); }
+.dot--entertainment  { background: var(--cat-entertainment); }
+.dot--bills          { background: var(--cat-bills); }
+.dot--shopping       { background: var(--cat-shopping); }
+.dot--education      { background: var(--cat-education); }
+.dot--health         { background: var(--cat-health); }
+.dot--subscriptions  { background: var(--cat-subscriptions); }
+.dot--savings        { background: var(--cat-savings); }
+.dot--salary         { background: var(--cat-salary); }
+.dot--freelance      { background: var(--cat-freelance); }
+.dot--gift           { background: var(--cat-gift); }
+.dot--scholarship    { background: var(--cat-scholarship); }
+.dot--refund         { background: var(--cat-refund); }
+.dot--investment     { background: var(--cat-investment); }
+.dot--other          { background: var(--cat-other); }
+
+.row:hover .dot {
+  transform: scale(1.2);
+}
+
+/* Income/expense amount colours (use these instead of inline styles) */
+.row-amount--income  { color: var(--color-success); }
+.row-amount--expense { color: var(--text-main); }
+
+:root[data-theme="dark"] .row-amount--expense {
+  color: var(--text-main);
 }

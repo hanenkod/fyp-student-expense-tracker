@@ -22,15 +22,15 @@
 
 .settings-section__title {
   margin: 0;
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--text-main);
 }
 
 .settings-section__subtitle {
   margin: 4px 0 0;
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   font-weight: 400;
   color: var(--text-soft);
@@ -59,14 +59,14 @@
 }
 
 .settings-row__label {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-main);
 }
 
 .settings-row__hint {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   color: var(--text-soft);
 }
@@ -89,7 +89,7 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-muted);
@@ -145,15 +145,15 @@
 }
 
 .currency-btn__symbol {
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--color-accent);
   line-height: 1;
 }
 
 .currency-btn__code {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 12px;
   font-weight: 700;
   color: var(--text-main);
@@ -161,7 +161,7 @@
 }
 
 .currency-btn__label {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 10px;
   color: var(--text-soft);
 }
@@ -177,7 +177,7 @@
 }
 
 .settings-preview__label {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-soft);
@@ -186,9 +186,9 @@
 }
 
 .settings-preview__value {
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--text-main);
 }
 
@@ -211,15 +211,15 @@
 }
 
 .data-stat__value {
-  font-family: "Inter-Black", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--color-accent);
   line-height: 1;
 }
 
 .data-stat__label {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   color: var(--text-soft);
 }
@@ -275,14 +275,14 @@
 }
 
 .export-btn__title {
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-main);
 }
 
 .export-btn__desc {
-  font-family: "Inter-Regular", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 11px;
   color: var(--text-soft);
   line-height: 1.4;
@@ -292,9 +292,9 @@
   margin-top: 12px;
   padding: 10px 14px;
   border-radius: var(--radius-8);
-  background: #d4edda;
-  color: #2f7a3d;
-  font-family: "Inter-Bold", Helvetica, Arial, sans-serif;
+  background: #d4f4dd;
+  color: #22863a;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif, Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
   animation: settingsFeedbackIn 0.25s ease;
@@ -309,6 +309,7 @@
    DARK THEME — activated via data-theme="dark" on <html>
    ============================================================ */
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --text-main: #f2f1f5;
   --text-muted: #c4c2cc;
   --text-soft: #9391a0;
@@ -381,7 +382,7 @@
 
 :root[data-theme="dark"] .export-feedback {
   background: rgba(47, 122, 61, 0.2);
-  color: #86d490;
+  color: #4ad66d;
 }
 
 :root[data-theme="dark"] .tx-input,
@@ -391,8 +392,23 @@
 :root[data-theme="dark"] .export-btn,
 :root[data-theme="dark"] .account-btn,
 :root[data-theme="dark"] .tx-toggle-btn {
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+/* Dark-mode select dropdown arrow (override light arrow) */
+:root[data-theme="dark"] .tx-select,
+:root[data-theme="dark"] .whatif-select {
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23c4c2cc' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+}
+
+/* Force option background in dark mode (kills zebra pattern) */
+:root[data-theme="dark"] .tx-select option,
+:root[data-theme="dark"] .whatif-select option {
+  background-color: #2a2847;
   color: var(--text-main);
 }
 
@@ -499,6 +515,12 @@
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+:root[data-theme="dark"] .goal-icon-btn--active {
+  background: rgba(144, 122, 214, 0.25) !important;
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
 :root[data-theme="dark"] .tx-type-btn {
   color: var(--text-soft);
 }
@@ -514,7 +536,7 @@
 }
 
 :root[data-theme="dark"] .tx-type-btn--income.tx-type-btn--active {
-  background: #5dbb63 !important;
+  background: #2fae52 !important;
 }
 
 :root[data-theme="dark"] .tx-tab {
@@ -665,8 +687,8 @@
 
 /* Pace pills should still look right */
 :root[data-theme="dark"] .pace-pill--positive {
-  background: rgba(93, 187, 99, 0.25);
-  color: #86d490;
+  background: rgba(47, 174, 82, 0.18);
+  color: #6ce08a;
 }
 
 :root[data-theme="dark"] .pace-pill--warning {
@@ -694,13 +716,17 @@
 }
 
 :root[data-theme="dark"] .chip-positive {
-  background: rgba(93, 187, 99, 0.25);
-  color: #86d490;
+  background: rgba(47, 174, 82, 0.18);
+  color: #6ce08a;
+  border: 1px solid rgba(108, 224, 138, 0.3);
+  box-shadow: 0 0 14px rgba(47, 174, 82, 0.15);
 }
 
 :root[data-theme="dark"] .chip-negative {
-  background: rgba(224, 82, 82, 0.25);
+  background: rgba(224, 82, 82, 0.18);
   color: #ff9b9b;
+  border: 1px solid rgba(255, 155, 155, 0.3);
+  box-shadow: 0 0 14px rgba(224, 82, 82, 0.15);
 }
 
 /* Safe tooltip */
@@ -787,5 +813,327 @@
   .settings-row {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+/* ============================================================
+   SAFE TO SPEND — expanded tooltip
+   ============================================================ */
+.safe-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 12px;
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  z-index: 20;
+}
+
+.safe-tooltip-content {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  animation: pockeSlideUp 0.3s ease;
+}
+
+.safe-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.safe-tooltip-title {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.safe-tooltip-close-x {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #9391a0;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.safe-tooltip-close-x:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-main);
+}
+
+.safe-tooltip-intro,
+.safe-tooltip-note {
+  margin: 0 0 12px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+  color: #6a6778;
+  line-height: 1.5;
+}
+
+.safe-tooltip-note {
+  margin-bottom: 0;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.safe-formula-block {
+  background: #f5f4f9;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.safe-formula-block:last-of-type {
+  margin-bottom: 0;
+}
+
+.safe-formula-title {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-accent);
+  margin-bottom: 8px;
+}
+
+.safe-formula-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+}
+
+.safe-formula-label {
+  color: #6a6778;
+}
+
+.safe-formula-value {
+  font-weight: 700;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.safe-formula-row--result {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.safe-formula-row--result .safe-formula-label {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.safe-formula-row--result .safe-formula-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+/* ── Dark theme for tooltip ── */
+:root[data-theme="dark"] .safe-tooltip-content {
+  background: #2a2847;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .safe-tooltip-title,
+:root[data-theme="dark"] .safe-formula-value,
+:root[data-theme="dark"] .safe-formula-row--result .safe-formula-label {
+  color: #f2f1f5;
+}
+
+:root[data-theme="dark"] .safe-tooltip-intro,
+:root[data-theme="dark"] .safe-tooltip-note,
+:root[data-theme="dark"] .safe-formula-label {
+  color: #c4c2cc;
+}
+
+:root[data-theme="dark"] .safe-tooltip-note {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .safe-formula-block {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .safe-formula-row--result {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .safe-formula-row--result .safe-formula-value {
+  color: #c4b5ed;
+}
+
+:root[data-theme="dark"] .safe-tooltip-close-x:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2f1f5;
+}
+
+/* ============================================================
+   INCOME EDITOR (Finances section)
+   ============================================================ */
+.income-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.income-display__value {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.income-display__edit-btn {
+  height: 36px;
+  padding: 0 18px;
+  border: 1.5px solid rgba(44, 42, 74, 0.12);
+  border-radius: 8px;
+  background: var(--bg-white);
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.income-display__edit-btn:hover {
+  border-color: var(--color-accent);
+  background: rgba(144, 122, 214, 0.06);
+  color: var(--color-accent);
+}
+
+.income-edit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.income-edit__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.income-edit__symbol {
+  position: absolute;
+  left: 12px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-soft);
+  pointer-events: none;
+}
+
+.income-edit__input {
+  width: 160px;
+  height: 40px;
+  padding: 0 12px 0 28px;
+  border: 1.5px solid var(--color-accent);
+  border-radius: 8px;
+  background: var(--bg-white);
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(144, 122, 214, 0.12);
+}
+
+.income-edit__input:focus {
+  border-color: var(--color-accent);
+}
+
+.income-edit__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.income-edit__btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  border: 1.5px solid transparent;
+}
+
+.income-edit__btn--save {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.income-edit__btn--save:hover {
+  background: #7d68c0;
+}
+
+.income-edit__btn--cancel {
+  background: var(--bg-white);
+  border-color: rgba(44, 42, 74, 0.12);
+  color: var(--text-main);
+}
+
+.income-edit__btn--cancel:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Dark theme */
+:root[data-theme="dark"] .income-display__edit-btn {
+  background: var(--bg-card);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+:root[data-theme="dark"] .income-display__edit-btn:hover {
+  background: rgba(144, 122, 214, 0.15);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .income-edit__input {
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+:root[data-theme="dark"] .income-edit__btn--cancel {
+  background: var(--bg-card);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+:root[data-theme="dark"] .income-edit__btn--cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 640px) {
+  .income-edit__input {
+    width: 140px;
   }
 }
