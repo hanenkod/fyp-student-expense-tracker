@@ -2,17 +2,9 @@ import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
+import { getStoredJSON, STORAGE_KEYS } from "../utils/storage";
 import "../styles/style.css";
 import "../styles/settings.css";
-
-const getStoredJSON = (key) => {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
 
 const triggerDownload = (content, filename, mime) => {
   const blob = new Blob([content], { type: mime });
@@ -59,13 +51,13 @@ export const Settings = () => {
   const handleExportJSON = () => {
     const data = {
       exportedAt: new Date().toISOString(),
-      user: getStoredJSON("pockeUser"),
-      onboarding: getStoredJSON("pockeOnboarding"),
-      transactions: getStoredJSON("pockeTransactions") || [],
-      scheduledPayments: getStoredJSON("pockeScheduledPayments") || [],
-      goals: getStoredJSON("pockeGoals") || [],
-      customExpenseCategories: getStoredJSON("pockeCustomExpenseCategories") || [],
-      customIncomeCategories: getStoredJSON("pockeCustomIncomeCategories") || [],
+      user: getStoredJSON(STORAGE_KEYS.USER),
+      onboarding: getStoredJSON(STORAGE_KEYS.ONBOARDING),
+      transactions: getStoredJSON(STORAGE_KEYS.TRANSACTIONS, []),
+      scheduledPayments: getStoredJSON(STORAGE_KEYS.SCHEDULED, []),
+      goals: getStoredJSON(STORAGE_KEYS.GOALS, []),
+      customExpenseCategories: getStoredJSON(STORAGE_KEYS.EXPENSE_CATS, []),
+      customIncomeCategories: getStoredJSON(STORAGE_KEYS.INCOME_CATS, []),
       settings,
     };
     const filename = `pocke-backup-${new Date().toISOString().split("T")[0]}.json`;
@@ -74,7 +66,7 @@ export const Settings = () => {
   };
 
   const handleExportCSV = () => {
-    const transactions = getStoredJSON("pockeTransactions") || [];
+    const transactions = getStoredJSON(STORAGE_KEYS.TRANSACTIONS, []);
     if (transactions.length === 0) {
       showToast("No transactions to export", { type: "warning" });
       return;
@@ -85,9 +77,9 @@ export const Settings = () => {
     showToast(`Exported ${transactions.length} transactions`, { type: "success" });
   };
 
-  const txCount = (getStoredJSON("pockeTransactions") || []).length;
-  const goalCount = (getStoredJSON("pockeGoals") || []).length;
-  const spCount = (getStoredJSON("pockeScheduledPayments") || []).length;
+  const txCount = getStoredJSON(STORAGE_KEYS.TRANSACTIONS, []).length;
+  const goalCount = getStoredJSON(STORAGE_KEYS.GOALS, []).length;
+  const spCount = getStoredJSON(STORAGE_KEYS.SCHEDULED, []).length;
 
   return (
     <div className="dashboard">

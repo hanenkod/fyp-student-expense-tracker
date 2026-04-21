@@ -1,12 +1,25 @@
 import { useState } from "react";
 import { Card, CardContent, CardFooter } from "./Card";
 
+/**
+ * Safe to Spend Today card with explanation tooltip.
+ *
+ * Two-level formula matching the FYP report definition:
+ *
+ *   Method 1 — BASIC: (onboardingIncome − fixedExpenses) ÷ daysLeft
+ *   Method 2 — EXTENDED: (onboardingIncome − fixedExpenses
+ *                        − loggedExpensesThisMonth
+ *                        + loggedIncomeThisMonth
+ *                        − upcomingSubscriptionsThisMonth) ÷ daysLeft
+ */
 export const SafeToSpendCard = ({
   title = "Safe to Spend Today",
   amount = "£30",
   income = 0,
-  expenses = 0,
-  currentBalance = 0,
+  fixedExpenses = 0,
+  loggedExpenses = 0,
+  loggedIncome = 0,
+  upcomingSubscriptions = 0,
   daysLeft = 1,
   currencySymbol = "£",
 }) => {
@@ -18,7 +31,14 @@ export const SafeToSpendCard = ({
       maximumFractionDigits: 2,
     })}`;
 
-  const budgetFormula = daysLeft > 0 ? Math.max(0, income - expenses) / daysLeft : 0;
+  const method1Remaining = Math.max(0, income - fixedExpenses);
+  const method1Daily = daysLeft > 0 ? method1Remaining / daysLeft : 0;
+
+  const method2Remaining = Math.max(
+    0,
+    income - fixedExpenses - loggedExpenses + loggedIncome - upcomingSubscriptions
+  );
+  const method2Daily = daysLeft > 0 ? method2Remaining / daysLeft : 0;
 
   return (
     <Card className="safe safe-card">
@@ -32,13 +52,15 @@ export const SafeToSpendCard = ({
           className="card-link"
           type="button"
           onClick={() => setShowInfo((prev) => !prev)}
+          aria-expanded={showInfo}
+          aria-controls="safe-tooltip-panel"
         >
-          How it’s calculated?
+          How it's calculated?
         </button>
       </CardFooter>
 
       {showInfo && (
-        <div className="safe-tooltip">
+        <div className="safe-tooltip" id="safe-tooltip-panel">
           <div className="safe-tooltip-content">
             <div className="safe-tooltip-header">
               <p className="safe-tooltip-title">How Safe to Spend works</p>
@@ -52,14 +74,18 @@ export const SafeToSpendCard = ({
             </div>
 
             <p className="safe-tooltip-intro">
-              Your daily spending allowance for the rest of the month. Two methods keep you honest — we use the tighter of the two.
+              A deterministic algorithm with two levels of detail. As your data grows, the formula transitions from the basic estimate to the extended one — and the app always shows the safer of the two.
             </p>
 
             <div className="safe-formula-block">
-              <div className="safe-formula-title">Method 1 — Budget split</div>
+              <div className="safe-formula-title">Method 1 — Basic (profile setup only)</div>
               <div className="safe-formula-row">
-                <span className="safe-formula-label">Income − Expenses this month</span>
-                <span className="safe-formula-value">{fmt(Math.max(0, income - expenses))}</span>
+                <span className="safe-formula-label">Monthly income</span>
+                <span className="safe-formula-value">{fmt(income)}</span>
+              </div>
+              <div className="safe-formula-row">
+                <span className="safe-formula-label">− Fixed expenses</span>
+                <span className="safe-formula-value">{fmt(fixedExpenses)}</span>
               </div>
               <div className="safe-formula-row">
                 <span className="safe-formula-label">÷ Days left in month</span>
@@ -67,15 +93,27 @@ export const SafeToSpendCard = ({
               </div>
               <div className="safe-formula-row safe-formula-row--result">
                 <span className="safe-formula-label">= Daily allowance</span>
-                <span className="safe-formula-value">{fmt(budgetFormula)}</span>
+                <span className="safe-formula-value">{fmt(method1Daily)}</span>
               </div>
             </div>
 
             <div className="safe-formula-block">
-              <div className="safe-formula-title">Method 2 — Live balance</div>
+              <div className="safe-formula-title">Method 2 — Extended (logged data)</div>
               <div className="safe-formula-row">
-                <span className="safe-formula-label">Current balance</span>
-                <span className="safe-formula-value">{fmt(currentBalance)}</span>
+                <span className="safe-formula-label">Monthly income</span>
+                <span className="safe-formula-value">{fmt(income)}</span>
+              </div>
+              <div className="safe-formula-row">
+                <span className="safe-formula-label">− Fixed expenses</span>
+                <span className="safe-formula-value">{fmt(fixedExpenses)}</span>
+              </div>
+              <div className="safe-formula-row">
+                <span className="safe-formula-label">− Logged expenses (net)</span>
+                <span className="safe-formula-value">{fmt(loggedExpenses - loggedIncome)}</span>
+              </div>
+              <div className="safe-formula-row">
+                <span className="safe-formula-label">− Upcoming subscriptions</span>
+                <span className="safe-formula-value">{fmt(upcomingSubscriptions)}</span>
               </div>
               <div className="safe-formula-row">
                 <span className="safe-formula-label">÷ Days left in month</span>
@@ -83,12 +121,12 @@ export const SafeToSpendCard = ({
               </div>
               <div className="safe-formula-row safe-formula-row--result">
                 <span className="safe-formula-label">= Daily allowance</span>
-                <span className="safe-formula-value">{fmt(daysLeft > 0 ? Math.max(0, currentBalance) / daysLeft : 0)}</span>
+                <span className="safe-formula-value">{fmt(method2Daily)}</span>
               </div>
             </div>
 
             <p className="safe-tooltip-note">
-              Spending under this amount each day keeps you on track. It updates in real time as you log transactions.
+              Spending under this amount each day keeps you on track. The number updates in real time as you log transactions and add subscriptions.
             </p>
           </div>
         </div>

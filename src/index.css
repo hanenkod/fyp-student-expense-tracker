@@ -284,3 +284,341 @@ body {
 :root[data-theme="dark"] .row-amount--expense {
   color: var(--text-main);
 }
+
+/* ============================================================
+   TOAST ACTION BUTTON (for Undo etc)
+   ============================================================ */
+.toast__action {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 12px;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: transparent;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #907ad6;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.toast__action:hover {
+  background: rgba(144, 122, 214, 0.08);
+  border-color: #907ad6;
+}
+
+:root[data-theme="dark"] .toast__action {
+  color: #c4b5ed;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme="dark"] .toast__action:hover {
+  background: rgba(144, 122, 214, 0.15);
+  border-color: #c4b5ed;
+}
+
+/* ============================================================
+   DASHBOARD EMPTY STATE
+   ============================================================ */
+.dashboard-empty {
+  background: #ffffff;
+  border: 1px dashed rgba(44, 42, 74, 0.15);
+  border-radius: 14px;
+  padding: 48px 32px;
+  margin-top: 18px;
+  text-align: center;
+  animation: pockeSlideUp 0.4s ease;
+}
+
+.dashboard-empty__illus {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.dashboard-empty__title {
+  margin: 0 0 8px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #2c2a4a;
+}
+
+.dashboard-empty__text {
+  margin: 0 auto 24px;
+  max-width: 460px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  color: #6a6778;
+  line-height: 1.6;
+}
+
+.dashboard-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.dashboard-empty__btn {
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(44, 42, 74, 0.12);
+  background: #ffffff;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c2a4a;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.dashboard-empty__btn:hover {
+  border-color: #907ad6;
+  background: rgba(144, 122, 214, 0.04);
+  transform: translateY(-1px);
+}
+
+.dashboard-empty__btn--primary {
+  background: #907ad6;
+  color: #ffffff;
+  border-color: #907ad6;
+}
+
+.dashboard-empty__btn--primary:hover {
+  background: #7d68c0;
+  border-color: #7d68c0;
+}
+
+.dashboard-empty__hints {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 620px;
+  margin: 0 auto;
+  padding-top: 24px;
+  border-top: 1px solid rgba(44, 42, 74, 0.08);
+}
+
+.dashboard-empty__hint {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+}
+
+.dashboard-empty__hint strong {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2c2a4a;
+}
+
+.dashboard-empty__hint span {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 12px;
+  color: #6a6778;
+  line-height: 1.4;
+}
+
+:root[data-theme="dark"] .dashboard-empty {
+  background: #252344;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .dashboard-empty__title {
+  color: #f2f1f5;
+}
+
+:root[data-theme="dark"] .dashboard-empty__text,
+:root[data-theme="dark"] .dashboard-empty__hint span {
+  color: #c4c2cc;
+}
+
+:root[data-theme="dark"] .dashboard-empty__btn {
+  background: #2a2847;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f2f1f5;
+}
+
+:root[data-theme="dark"] .dashboard-empty__btn:hover {
+  background: rgba(144, 122, 214, 0.15);
+  border-color: #907ad6;
+}
+
+:root[data-theme="dark"] .dashboard-empty__btn--primary,
+:root[data-theme="dark"] .dashboard-empty__btn--primary:hover {
+  background: #907ad6;
+  border-color: #907ad6;
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .dashboard-empty__hints {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .dashboard-empty__hint strong {
+  color: #f2f1f5;
+}
+
+@media (max-width: 640px) {
+  .dashboard-empty__hints {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY — focus states
+   ============================================================ */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid #907ad6;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Native focus ring is redundant when we have focus-visible */
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================================
+   CONFIRM MODAL
+   ============================================================ */
+.confirm-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 13, 31, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: pockeFadeIn 0.2s ease;
+}
+
+.confirm-modal {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px 24px 20px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: pockeScaleIn 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.confirm-modal__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 auto 16px;
+}
+
+.confirm-modal__icon--danger {
+  background: linear-gradient(135deg, #e05252, #d13d3d);
+  box-shadow: 0 6px 16px rgba(224, 82, 82, 0.35);
+}
+
+.confirm-modal__title {
+  margin: 0 0 8px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #2c2a4a;
+  line-height: 1.3;
+}
+
+.confirm-modal__message {
+  margin: 0 0 20px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  color: #6a6778;
+  line-height: 1.5;
+}
+
+.confirm-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.confirm-modal__btn {
+  flex: 1;
+  height: 44px;
+  padding: 0 18px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.confirm-modal__btn:active {
+  transform: translateY(1px);
+}
+
+.confirm-modal__btn--cancel {
+  background: #ffffff;
+  border-color: rgba(44, 42, 74, 0.15);
+  color: #2c2a4a;
+}
+
+.confirm-modal__btn--cancel:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(44, 42, 74, 0.25);
+}
+
+.confirm-modal__btn--danger {
+  background: linear-gradient(135deg, #e05252, #d13d3d);
+  color: #ffffff;
+}
+
+.confirm-modal__btn--danger:hover {
+  background: linear-gradient(135deg, #d13d3d, #b32e2e);
+}
+
+.confirm-modal__btn--primary {
+  background: linear-gradient(135deg, #907ad6, #7d68c0);
+  color: #ffffff;
+}
+
+/* Dark theme */
+:root[data-theme="dark"] .confirm-modal {
+  background: #252344;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .confirm-modal__title {
+  color: #f2f1f5;
+}
+
+:root[data-theme="dark"] .confirm-modal__message {
+  color: #c4c2cc;
+}
+
+:root[data-theme="dark"] .confirm-modal__btn--cancel {
+  background: #2a2847;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f2f1f5;
+}
+
+:root[data-theme="dark"] .confirm-modal__btn--cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+}

@@ -2,17 +2,9 @@ import { useState, useMemo } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
+import { getStoredJSON, STORAGE_KEYS } from "../utils/storage";
 import "../styles/style.css";
 import "../styles/whatif.css";
-
-const getStoredJSON = (key) => {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
 
 const SCENARIO_TYPES = [
   { id: "purchase", label: "One-time purchase", icon: "🛒", hint: "e.g. new laptop for £800" },
@@ -34,10 +26,10 @@ export const WhatIf = () => {
   const { formatMoney, currencyInfo } = useSettings();
   const { showToast } = useToast();
 
-  const onboardingData = getStoredJSON("pockeOnboarding") || {};
-  const allTransactions = getStoredJSON("pockeTransactions") || [];
-  const scheduledPayments = getStoredJSON("pockeScheduledPayments") || [];
-  const goals = getStoredJSON("pockeGoals") || [];
+  const onboardingData = getStoredJSON(STORAGE_KEYS.ONBOARDING, {});
+  const allTransactions = getStoredJSON(STORAGE_KEYS.TRANSACTIONS, []);
+  const scheduledPayments = getStoredJSON(STORAGE_KEYS.SCHEDULED, []);
+  const goals = getStoredJSON(STORAGE_KEYS.GOALS, []);
 
   const baseIncome = Number(onboardingData.income || 0);
 

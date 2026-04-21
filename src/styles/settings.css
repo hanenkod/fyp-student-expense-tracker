@@ -1137,3 +1137,40 @@
     width: 140px;
   }
 }
+
+/* ============================================================
+   DARK THEME — filters, amount prefix
+   ============================================================ */
+:root[data-theme="dark"] .tx-filters {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .tx-filter-group {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .tx-filter-chip {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .tx-filter-chip--active {
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .tx-filter-chip--active.tx-filter-chip--income {
+  color: #6ce08a;
+}
+
+:root[data-theme="dark"] .tx-filter-chip--active.tx-filter-chip--expense {
+  color: #ff9b9b;
+}
+
+:root[data-theme="dark"] .tx-filter-clear:hover {
+  background: rgba(144, 122, 214, 0.15);
+}
+
+:root[data-theme="dark"] .tx-amount-symbol {
+  color: var(--text-soft);
+}

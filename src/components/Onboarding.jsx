@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Module } from "./Module";
 import { useSettings } from "./SettingsContext";
+import { saveJSON, STORAGE_KEYS } from "../utils/storage";
 import removebg1 from "./removebg-1.png";
 import "../styles/auth.css";
 
@@ -65,8 +66,8 @@ export const Onboarding = () => {
       completed: true,
     };
 
-    localStorage.setItem("pockeOnboarding", JSON.stringify(onboardingData));
-    localStorage.setItem("pockeSession", JSON.stringify({ isLoggedIn: true }));
+    saveJSON(STORAGE_KEYS.ONBOARDING, onboardingData);
+    saveJSON(STORAGE_KEYS.SESSION, { isLoggedIn: true });
     navigate("/dashboard");
   };
 

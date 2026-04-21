@@ -7,18 +7,10 @@ import { SafeToSpendCard } from "./SafeToSpendCard";
 import { MetricCard } from "./MetricCard";
 import { TrendArrow } from "./TrendArrow";
 import { useSettings } from "./SettingsContext";
+import { getStoredJSON, STORAGE_KEYS } from "../utils/storage";
 
 import "../styles/style.css";
 import "../styles/dashboard.css";
-
-const getStoredJSON = (key) => {
-  try {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
-  } catch {
-    return null;
-  }
-};
 
 const formatPercent = (value) => `${Math.round(value)}%`;
 
@@ -30,11 +22,11 @@ export const Dashboard = () => {
   const formatCurrency = formatMoney;
   const formatCurrencyFixed = (v) => formatMoney(v, { minFractionDigits: 2, maxFractionDigits: 2 });
 
-  const onboardingData = getStoredJSON("pockeOnboarding") || {};
-  const userData = getStoredJSON("pockeUser") || {};
-  const allTransactions = getStoredJSON("pockeTransactions") || [];
-  const scheduledPayments = getStoredJSON("pockeScheduledPayments") || [];
-  const savingsGoals = getStoredJSON("pockeGoals") || [];
+  const onboardingData = getStoredJSON(STORAGE_KEYS.ONBOARDING, {});
+  const userData = getStoredJSON(STORAGE_KEYS.USER, {});
+  const allTransactions = getStoredJSON(STORAGE_KEYS.TRANSACTIONS, []);
+  const scheduledPayments = getStoredJSON(STORAGE_KEYS.SCHEDULED, []);
+  const savingsGoals = getStoredJSON(STORAGE_KEYS.GOALS, []);
 
   const income = Number(onboardingData.income || 0);
 
@@ -147,13 +139,57 @@ export const Dashboard = () => {
               </div>
             </header>
 
+            {allTransactions.length === 0 && scheduledPayments.length === 0 && savingsGoals.length === 0 ? (
+              <section className="dashboard-empty">
+                <div className="dashboard-empty__illus" aria-hidden="true">💸</div>
+                <h2 className="dashboard-empty__title">Welcome to POCKE, {userData.name || "there"}!</h2>
+                <p className="dashboard-empty__text">
+                  You're all set up. Start tracking your money by adding your first transaction —
+                  everything on this dashboard will come to life as you go.
+                </p>
+                <div className="dashboard-empty__actions">
+                  <button
+                    type="button"
+                    className="dashboard-empty__btn dashboard-empty__btn--primary"
+                    onClick={() => navigate("/transactions")}
+                  >
+                    Add your first transaction
+                  </button>
+                  <button
+                    type="button"
+                    className="dashboard-empty__btn"
+                    onClick={() => navigate("/whatif")}
+                  >
+                    Try the What-If Planner
+                  </button>
+                </div>
+
+                <div className="dashboard-empty__hints">
+                  <div className="dashboard-empty__hint">
+                    <strong>Track spending</strong>
+                    <span>Log expenses and income to see daily and monthly summaries</span>
+                  </div>
+                  <div className="dashboard-empty__hint">
+                    <strong>Set goals</strong>
+                    <span>Save towards trips, gadgets or an emergency fund</span>
+                  </div>
+                  <div className="dashboard-empty__hint">
+                    <strong>Plan ahead</strong>
+                    <span>Simulate big purchases before you commit</span>
+                  </div>
+                </div>
+              </section>
+            ) : (
+            <>
             <section className="grid-top">
               <SafeToSpendCard
                 title="Safe to Spend Today"
                 amount={formatCurrencyFixed(safeToSpend)}
                 income={income}
-                expenses={totalExpenses}
-                currentBalance={currentBalance}
+                fixedExpenses={Number(onboardingData.expenses || 0)}
+                loggedExpenses={totalExpenses}
+                loggedIncome={totalIncome}
+                upcomingSubscriptions={scheduledPayments.reduce((s, p) => s + Number(p.amount || 0), 0)}
                 daysLeft={remainingDays}
                 currencySymbol={currencyInfo.symbol}
               />
@@ -323,6 +359,8 @@ export const Dashboard = () => {
                 <CardFooter className="card-footer--tight" />
               </Card>
             </section>
+            </>
+            )}
           </main>
         </div>
       </div>

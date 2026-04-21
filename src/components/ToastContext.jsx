@@ -25,9 +25,9 @@ export const ToastProvider = ({ children }) => {
 
   const showToast = useCallback(
     (message, options = {}) => {
-      const { type = "info", duration = 3000, icon } = options;
+      const { type = "info", duration = 3000, icon, action } = options;
       const id = ++toastIdCounter;
-      const toast = { id, message, type, icon, leaving: false };
+      const toast = { id, message, type, icon, action, leaving: false };
       setToasts((prev) => [...prev, toast]);
 
       if (duration > 0) {
@@ -39,6 +39,12 @@ export const ToastProvider = ({ children }) => {
     [removeToast]
   );
 
+  const handleActionClick = (e, toast) => {
+    e.stopPropagation();
+    if (toast.action?.onClick) toast.action.onClick();
+    removeToast(toast.id);
+  };
+
   return (
     <ToastContext.Provider value={{ showToast, removeToast }}>
       {children}
@@ -47,10 +53,19 @@ export const ToastProvider = ({ children }) => {
           <div
             key={t.id}
             className={`toast toast--${t.type} ${t.leaving ? "toast--leaving" : ""}`}
-            onClick={() => removeToast(t.id)}
+            onClick={() => !t.action && removeToast(t.id)}
           >
             <span className="toast__icon">{t.icon || defaultIcon(t.type)}</span>
             <span className="toast__message">{t.message}</span>
+            {t.action && (
+              <button
+                type="button"
+                className="toast__action"
+                onClick={(e) => handleActionClick(e, t)}
+              >
+                {t.action.label}
+              </button>
+            )}
             <button
               type="button"
               className="toast__close"
