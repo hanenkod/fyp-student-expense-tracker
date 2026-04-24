@@ -909,3 +909,133 @@
 :root[data-theme="dark"] .profile-password__btn--cancel:hover {
   background: rgba(255, 255, 255, 0.06);
 }
+/* ============================================================
+   INCOME vs SPENDING FLOW BAR (Financial Summary)
+   ============================================================ */
+.flow-section {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(44, 42, 74, 0.03);
+  border-radius: 10px;
+}
+
+.flow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.flow-label {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-soft, #6a6778);
+}
+
+.flow-net {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.flow-net--positive {
+  color: #22863a;
+  background: rgba(47, 174, 82, 0.12);
+}
+
+.flow-net--negative {
+  color: #a62323;
+  background: rgba(224, 82, 82, 0.12);
+}
+
+.flow-bar {
+  display: flex;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(44, 42, 74, 0.06);
+  margin-bottom: 12px;
+}
+
+.flow-bar__segment {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flow-bar__segment--earned {
+  background: linear-gradient(90deg, #2fae52, #52c76e);
+}
+
+.flow-bar__segment--spent {
+  background: linear-gradient(90deg, #e05252, #ef6e6e);
+}
+
+.flow-legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.flow-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.flow-legend-dot--earned { background: #2fae52; }
+.flow-legend-dot--spent { background: #e05252; }
+
+.flow-legend-text {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--text-muted, #6a6778);
+}
+
+.flow-legend-text strong {
+  color: var(--text-main, #2c2a4a);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dark theme */
+:root[data-theme="dark"] .flow-section {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .flow-bar {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .flow-label {
+  color: var(--text-soft);
+}
+
+:root[data-theme="dark"] .flow-legend-text {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .flow-legend-text strong {
+  color: var(--text-main);
+}
+
+:root[data-theme="dark"] .flow-net--positive {
+  color: #6ce08a;
+  background: rgba(47, 174, 82, 0.15);
+}
+
+:root[data-theme="dark"] .flow-net--negative {
+  color: #ff9b9b;
+  background: rgba(224, 82, 82, 0.15);
+}
