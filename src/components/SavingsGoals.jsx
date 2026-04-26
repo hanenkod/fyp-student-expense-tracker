@@ -3,30 +3,23 @@ import { SavingsPanel } from "./SavingsPanel";
 import { ConfirmModal } from "./ConfirmModal";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
-import { saveJSON, STORAGE_KEYS } from "../utils/storage";
+import { useData } from "./DataContext";
 
 const GOAL_ICONS = ["🛡️","✈️","🏠","💻","🎓","🚗","💰","🎁","📱","🎯"];
 const GOAL_COLORS = ["#2fae52","#4f518c","#907ad6","#e07c4a","#d65c8a","#3d9be9"];
 
-export const SavingsGoals = ({
-  goals,
-  onGoalsChange,
-  transactions,
-  onTransactionsChange,
-}) => {
+export const SavingsGoals = () => {
   const { formatMoney, currencyInfo } = useSettings();
   const { showToast } = useToast();
+  const { goals, addGoal, removeGoal, addToGoal, withdrawFromGoal } = useData();
 
   const [goalForm, setGoalForm] = useState({ title: "", target: "", icon: "🎯" });
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [withdrawingGoalId, setWithdrawingGoalId] = useState(null);
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [pendingDelete, setPendingDelete] = useState(null);  // goal object awaiting confirm
+  const [pendingDelete, setPendingDelete] = useState(null);
 
-  const persistGoals = (u) => { onGoalsChange(u); saveJSON(STORAGE_KEYS.GOALS, u); };
-  const persistTx = (u) => { onTransactionsChange(u); saveJSON(STORAGE_KEYS.TRANSACTIONS, u); };
-
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     if (!goalForm.title.trim()) {
       showToast("Please enter a goal name", { type: "error" });
       return;
@@ -36,86 +29,59 @@ export const SavingsGoals = ({
       showToast("Target must be greater than zero", { type: "error" });
       return;
     }
-    const newGoal = {
-      id: `sg_${Date.now()}`,
-      title: goalForm.title.trim(),
-      icon: goalForm.icon,
-      target,
-      saved: 0,
-      color: GOAL_COLORS[goals.length % GOAL_COLORS.length],
-    };
-    persistGoals([...goals, newGoal]);
-    setGoalForm({ title: "", target: "", icon: "🎯" });
-    setShowGoalForm(false);
-    showToast(`New goal created: ${newGoal.title}`, { type: "success" });
-  };
-
-  const handleAddToGoal = (id, amt) => {
-    const goal = goals.find((g) => g.id === id);
-    if (!goal) return;
-    const remaining = Math.max(0, goal.target - goal.saved);
-    const actualAmt = Math.min(amt, remaining);
-    if (actualAmt <= 0) return;
-
-    const nowIso = new Date().toISOString().slice(0, 16);
-    const newTx = {
-      id: `tx_${Date.now()}`, type: "expense",
-      name: `Savings: ${goal.title}`, category: "Savings",
-      amount: actualAmt, date: nowIso, source: "savings", goalId: id,
-    };
-    persistTx([newTx, ...transactions]);
-    const updatedGoals = goals.map((g) => g.id === id ? { ...g, saved: g.saved + actualAmt } : g);
-    persistGoals(updatedGoals);
-
-    const updatedGoal = updatedGoals.find((g) => g.id === id);
-    if (updatedGoal && updatedGoal.saved >= updatedGoal.target) {
-      showToast(`🎉 Goal reached: ${goal.title}!`, { type: "success", duration: 4000 });
-    } else {
-      showToast(`${formatMoney(actualAmt)} added to ${goal.title}`, { type: "success" });
+    try {
+      const created = await addGoal({
+        title: goalForm.title.trim(),
+        icon: goalForm.icon,
+        target,
+        saved: 0,
+        color: GOAL_COLORS[goals.length % GOAL_COLORS.length],
+      });
+      setGoalForm({ title: "", target: "", icon: "🎯" });
+      setShowGoalForm(false);
+      showToast(`New goal created: ${created.title}`, { type: "success" });
+    } catch (err) {
+      showToast(err?.body?.error || "Could not create goal", { type: "error" });
     }
   };
 
-  const handleWithdrawFromGoal = (id, amt) => {
-    const goal = goals.find((g) => g.id === id);
-    if (!goal || goal.saved <= 0) return;
-    const actualAmt = Math.min(amt, goal.saved);
-
-    const nowIso = new Date().toISOString().slice(0, 16);
-    const newTx = {
-      id: `tx_${Date.now()}`, type: "income",
-      name: `Withdraw: ${goal.title}`, category: "Savings",
-      amount: actualAmt, date: nowIso, source: "savings", goalId: id,
-    };
-    persistTx([newTx, ...transactions]);
-    persistGoals(goals.map((g) => g.id === id ? { ...g, saved: g.saved - actualAmt } : g));
-    showToast(`${formatMoney(actualAmt)} withdrawn from ${goal.title}`, { type: "info" });
+  const handleAddToGoal = async (id, amt) => {
+    try {
+      const result = await addToGoal(id, amt);
+      const goal = result.goal;
+      if (goal.saved >= goal.target) {
+        showToast(`🎉 Goal reached: ${goal.title}!`, { type: "success", duration: 4000 });
+      } else {
+        showToast(`${formatMoney(amt)} added to ${goal.title}`, { type: "success" });
+      }
+    } catch (err) {
+      showToast(err?.body?.error || "Could not add to goal", { type: "error" });
+    }
   };
 
-  const handleDeleteGoal = (id) => {
-    const goal = goals.find((g) => g.id === id);
-    if (!goal) return;
-    setPendingDelete(goal);
+  const handleWithdraw = async (id, amt) => {
+    try {
+      const result = await withdrawFromGoal(id, amt);
+      showToast(`${formatMoney(amt)} withdrawn from ${result.goal.title}`, { type: "info" });
+    } catch (err) {
+      showToast(err?.body?.error || "Could not withdraw", { type: "error" });
+    }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     const goal = pendingDelete;
     if (!goal) return;
-
-    if (goal.saved > 0) {
-      const nowIso = new Date().toISOString().slice(0, 16);
-      const newTx = {
-        id: `tx_${Date.now()}`, type: "income",
-        name: `Refund: ${goal.title}`, category: "Savings",
-        amount: goal.saved, date: nowIso, source: "savings",
-      };
-      persistTx([newTx, ...transactions]);
+    try {
+      await removeGoal(goal.id);
+      showToast(
+        `Goal deleted: ${goal.title}${goal.saved > 0 ? ` (${formatMoney(goal.saved)} refunded)` : ""}`,
+        { type: "info" }
+      );
+    } catch (err) {
+      showToast(err?.body?.error || "Could not delete goal", { type: "error" });
+    } finally {
+      setPendingDelete(null);
     }
-    persistGoals(goals.filter((g) => g.id !== goal.id));
-    showToast(
-      `Goal deleted: ${goal.title}${goal.saved > 0 ? ` (${formatMoney(goal.saved)} refunded)` : ""}`,
-      { type: "info" }
-    );
-    setPendingDelete(null);
   };
 
   return (
@@ -156,9 +122,7 @@ export const SavingsGoals = ({
                 onClick={() => setGoalForm((p) => ({ ...p, icon }))}
                 aria-label={`Icon ${icon}`}
                 aria-pressed={goalForm.icon === icon}
-              >
-                {icon}
-              </button>
+              >{icon}</button>
             ))}
           </div>
           <input
@@ -181,9 +145,7 @@ export const SavingsGoals = ({
               aria-label="Target amount"
             />
           </div>
-          <button type="button" className="tx-submit" onClick={handleAddGoal}>
-            Create Goal
-          </button>
+          <button type="button" className="tx-submit" onClick={handleAddGoal}>Create Goal</button>
         </div>
       )}
 
@@ -200,11 +162,9 @@ export const SavingsGoals = ({
               <button
                 type="button"
                 className="tx-savings-delete"
-                onClick={() => handleDeleteGoal(g.id)}
+                onClick={() => setPendingDelete(g)}
                 aria-label={`Delete ${g.title}`}
-              >
-                ×
-              </button>
+              >×</button>
               <SavingsPanel
                 title={g.title}
                 leftAmount={formatMoney(g.saved || 0)}
@@ -229,7 +189,6 @@ export const SavingsGoals = ({
                       if (withdrawingGoalId === g.id) { setWithdrawingGoalId(null); setWithdrawAmount(""); }
                       else { setWithdrawingGoalId(g.id); setWithdrawAmount(""); }
                     }}
-                    aria-label={`Withdraw from ${g.title}`}
                   >
                     {withdrawingGoalId === g.id ? "Cancel" : "Withdraw"}
                   </button>
@@ -248,16 +207,13 @@ export const SavingsGoals = ({
                     max={g.saved}
                     step="0.01"
                     autoFocus
-                    aria-label={`Withdraw amount from ${g.title}`}
-                    onKeyDown={(e) => {
+                    onKeyDown={async (e) => {
                       if (e.key === "Enter") {
                         const amt = Number(withdrawAmount);
                         if (amt > 0 && amt <= g.saved) {
-                          handleWithdrawFromGoal(g.id, amt);
+                          await handleWithdraw(g.id, amt);
                           setWithdrawingGoalId(null);
                           setWithdrawAmount("");
-                        } else {
-                          showToast(`Withdraw must be between ${formatMoney(0.01)} and ${formatMoney(g.saved)}`, { type: "error" });
                         }
                       }
                     }}
@@ -265,19 +221,15 @@ export const SavingsGoals = ({
                   <button
                     type="button"
                     className="tx-submit tx-submit--sm"
-                    onClick={() => {
+                    onClick={async () => {
                       const amt = Number(withdrawAmount);
                       if (amt > 0 && amt <= g.saved) {
-                        handleWithdrawFromGoal(g.id, amt);
+                        await handleWithdraw(g.id, amt);
                         setWithdrawingGoalId(null);
                         setWithdrawAmount("");
-                      } else {
-                        showToast(`Withdraw must be between ${formatMoney(0.01)} and ${formatMoney(g.saved)}`, { type: "error" });
                       }
                     }}
-                  >
-                    Withdraw
-                  </button>
+                  >Withdraw</button>
                 </div>
               )}
             </div>

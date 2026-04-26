@@ -4,33 +4,55 @@ import { AddTransactionForm } from "./AddTransactionForm";
 import { AddScheduledPaymentForm } from "./AddScheduledPaymentForm";
 import { SavingsGoals } from "./SavingsGoals";
 import { TransactionList } from "./TransactionList";
-import { getStoredJSON, STORAGE_KEYS } from "../utils/storage";
+import { useAuth } from "./AuthContext";
+import { useData } from "./DataContext";
+import { api } from "../utils/api";
 import "../styles/style.css";
 import "../styles/transactions.css";
 
 export const Transactions = () => {
-  // Single source of truth for all tx-related state, distributed to children via props.
-  // Each child writes its slice back to LocalStorage via utils/storage helpers.
-  const [transactions, setTransactions] = useState(
-    () => getStoredJSON(STORAGE_KEYS.TRANSACTIONS, [])
-  );
-  const [scheduled, setScheduled] = useState(
-    () => getStoredJSON(STORAGE_KEYS.SCHEDULED, [])
-  );
-  const [goals, setGoals] = useState(
-    () => getStoredJSON(STORAGE_KEYS.GOALS, [])
-  );
-  const [customExpCat, setCustomExpCat] = useState(
-    () => getStoredJSON(STORAGE_KEYS.EXPENSE_CATS, [])
-  );
-  const [customIncCat, setCustomIncCat] = useState(
-    () => getStoredJSON(STORAGE_KEYS.INCOME_CATS, [])
-  );
+  const { user, setUser } = useAuth();
+  const { loading } = useData();
 
-  const handleCategoriesChange = (kind, updated) => {
-    if (kind === "expense") setCustomExpCat(updated);
-    else setCustomIncCat(updated);
+  // Custom categories live on the user record (settingsJson would also work,
+  // but we kept dedicated columns to keep things simple).
+  const customExpCat = user?.customExpenseCategories
+    ? JSON.parse(user.customExpenseCategories)
+    : [];
+  const customIncCat = user?.customIncomeCategories
+    ? JSON.parse(user.customIncomeCategories)
+    : [];
+
+  // Local copies that we sync to the API on change.
+  const [expCats, setExpCats] = useState(customExpCat);
+  const [incCats, setIncCats] = useState(customIncCat);
+
+  const handleCategoriesChange = async (kind, updated) => {
+    if (kind === "expense") {
+      setExpCats(updated);
+      const u = await api.updateMe({ customExpenseCategories: JSON.stringify(updated) });
+      setUser(u);
+    } else {
+      setIncCats(updated);
+      const u = await api.updateMe({ customIncomeCategories: JSON.stringify(updated) });
+      setUser(u);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div className="app-shell">
+          <div className="layout">
+            <Sidebar />
+            <main className="content" style={{ display: "grid", placeItems: "center", minHeight: "60vh", color: "#9391a0" }}>
+              Loading…
+            </main>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
@@ -50,34 +72,18 @@ export const Transactions = () => {
             <div className="tx-layout">
               <div className="tx-left">
                 <AddTransactionForm
-                  transactions={transactions}
-                  onTransactionsChange={setTransactions}
-                  customExpCat={customExpCat}
-                  customIncCat={customIncCat}
+                  customExpCat={expCats}
+                  customIncCat={incCats}
                   onCategoriesChange={handleCategoriesChange}
                 />
-
-                <AddScheduledPaymentForm
-                  scheduled={scheduled}
-                  onScheduledChange={setScheduled}
-                />
-
-                <SavingsGoals
-                  goals={goals}
-                  onGoalsChange={setGoals}
-                  transactions={transactions}
-                  onTransactionsChange={setTransactions}
-                />
+                <AddScheduledPaymentForm />
+                <SavingsGoals />
               </div>
 
               <div className="tx-right">
                 <TransactionList
-                  transactions={transactions}
-                  onTransactionsChange={setTransactions}
-                  scheduled={scheduled}
-                  onScheduledChange={setScheduled}
-                  customExpCat={customExpCat}
-                  customIncCat={customIncCat}
+                  customExpCat={expCats}
+                  customIncCat={incCats}
                 />
               </div>
             </div>

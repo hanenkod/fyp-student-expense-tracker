@@ -1,122 +1,89 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ConfirmModal } from "./ConfirmModal";
 import { useSettings } from "./SettingsContext";
+import { useAuth } from "./AuthContext";
+import { api } from "../utils/api";
 
 const getInitials = (name) => {
   if (!name) return "?";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 };
 
-const memberSince = () => {
-  const now = new Date();
-  return now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-};
+const memberSince = () => new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
-export const ProfileSummaryCard = ({
-  name,
-  email,
-  income,
-  expenses,
-  balance,
-}) => {
+export const ProfileSummaryCard = ({ name, email, income, expenses, balance }) => {
   const navigate = useNavigate();
   const { formatMoney } = useSettings();
+  const { logout } = useAuth();
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("pockeSession");
+    logout();
     navigate("/login");
   };
 
-  const handleDeleteAccount = () => {
-    localStorage.removeItem("pockeUser");
-    localStorage.removeItem("pockeSession");
-    localStorage.removeItem("pockeOnboarding");
-    localStorage.removeItem("pockeTransactions");
-    localStorage.removeItem("pockeScheduledPayments");
-    localStorage.removeItem("pockeGoals");
-    localStorage.removeItem("pockeAchievements");
-    localStorage.removeItem("pockeCustomExpenseCategories");
-    localStorage.removeItem("pockeCustomIncomeCategories");
+  const handleDeleteAccount = async () => {
+    try {
+      await api.deleteMe();
+    } catch (err) {
+      console.error("Delete account failed:", err);
+    }
+    logout();
     navigate("/registration");
   };
 
   return (
     <div className="profile-card card-soft">
-      <div className="profile-avatar">{getInitials(name)}</div>
+      <ConfirmModal
+        open={showLogoutConfirm}
+        title="Log out?"
+        message="You'll need to sign in again to access your data."
+        confirmLabel="Log out"
+        confirmKind="primary"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title="Delete account permanently?"
+        message="All your transactions, goals, subscriptions and settings will be erased. This cannot be undone."
+        confirmLabel="Delete everything"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
 
+      <div className="profile-avatar">{getInitials(name)}</div>
       <h2 className="profile-name">{name || "User"}</h2>
       <p className="profile-email">{email || "—"}</p>
       <p className="profile-member">Member since {memberSince()}</p>
 
       <div className="profile-stats">
         <div className="profile-stat">
-          <span className="profile-stat__value">{formatMoney(income)}</span>
+          <span className="profile-stat__value">{formatMoney(Math.round(income))}</span>
           <span className="profile-stat__label">Income</span>
         </div>
-
         <div className="profile-stat__divider" />
-
         <div className="profile-stat">
-          <span className="profile-stat__value">{formatMoney(expenses)}</span>
+          <span className="profile-stat__value">{formatMoney(Math.round(expenses))}</span>
           <span className="profile-stat__label">Expenses</span>
         </div>
-
         <div className="profile-stat__divider" />
-
         <div className="profile-stat">
-          <span className="profile-stat__value">{formatMoney(balance)}</span>
+          <span className="profile-stat__value">{formatMoney(Math.round(balance))}</span>
           <span className="profile-stat__label">Balance</span>
         </div>
       </div>
 
       <div className="profile-account-btns">
-        <button
-          type="button"
-          className="account-btn account-btn--logout"
-          onClick={handleLogout}
-        >
+        <button type="button" className="account-btn account-btn--logout" onClick={() => setShowLogoutConfirm(true)}>
           Log Out
         </button>
-
-        {!showDeleteConfirm ? (
-          <button
-            type="button"
-            className="account-btn account-btn--delete"
-            onClick={() => setShowDeleteConfirm(true)}
-          >
-            Delete Account
-          </button>
-        ) : (
-          <div className="delete-confirm">
-            <p className="delete-confirm__text">
-              This will permanently delete your account and all data. This
-              action cannot be undone.
-            </p>
-            <div className="delete-confirm__actions">
-              <button
-                type="button"
-                className="profile-btn profile-btn--cancel"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="account-btn account-btn--confirm-delete"
-                onClick={handleDeleteAccount}
-              >
-                Yes, Delete Everything
-              </button>
-            </div>
-          </div>
-        )}
+        <button type="button" className="account-btn account-btn--delete" onClick={() => setShowDeleteConfirm(true)}>
+          Delete Account
+        </button>
       </div>
     </div>
   );

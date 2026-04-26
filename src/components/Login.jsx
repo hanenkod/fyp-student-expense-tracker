@@ -1,103 +1,68 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 import { BiApple } from "./BiApple";
 import { DeviconGoogle } from "./DeviconGoogle";
 import removebg1 from "./removebg-1.png";
 import "../styles/auth.css";
 
-const initialForm = {
-  email: "",
-  password: "",
-};
+const initialForm = { email: "", password: "" };
 
 export const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.email.trim()) {
       newErrors.email = "Enter your email";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Invalid email";
     }
-
     if (!formData.password.trim()) {
       newErrors.password = "Enter password";
     } else if (formData.password.length < 6) {
       newErrors.password = "Min 6 characters";
     }
-
     return newErrors;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const validationErrors = validateForm();
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    const storedUser = (() => {
-      try {
-        const raw = localStorage.getItem("pockeUser");
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
+    setSubmitting(true);
+    try {
+      const me = await login(formData.email.trim(), formData.password);
+      navigate(me.onboarded ? "/dashboard" : "/onboarding");
+    } catch (err) {
+      // Backend returns 401 with { error: "Invalid email or password" }.
+      // We surface it on the password field — same UX as before.
+      if (err?.status === 401) {
+        setErrors({ password: err.body?.error || "Invalid email or password" });
+      } else if (err?.status === 400) {
+        setErrors({ email: "Please check your input" });
+      } else {
+        setErrors({ password: "Could not log in. Try again later." });
       }
-    })();
-
-    if (!storedUser) {
-      setErrors({ email: "No account found. Please sign up first." });
-      return;
-    }
-
-    if (storedUser.email.toLowerCase() !== formData.email.trim().toLowerCase()) {
-      setErrors({ email: "No account found with this email" });
-      return;
-    }
-
-    if (storedUser.password !== formData.password) {
-      setErrors({ password: "Incorrect password" });
-      return;
-    }
-
-    localStorage.setItem("pockeSession", JSON.stringify({ isLoggedIn: true }));
-
-    const onboarding = (() => {
-      try {
-        const raw = localStorage.getItem("pockeOnboarding");
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
-      }
-    })();
-
-    if (onboarding?.completed) {
-      navigate("/dashboard");
-    } else {
-      navigate("/onboarding");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -116,10 +81,7 @@ export const Login = () => {
             </div>
 
             <div className="registration__brandBlock">
-              <h2 className="registration__logo registration__logo--light">
-                POCKE
-              </h2>
-
+              <h2 className="registration__logo registration__logo--light">POCKE</h2>
               <p className="registration__tagline">
                 Know what you can spend today.
                 <br />
@@ -132,10 +94,7 @@ export const Login = () => {
         <main className="registration__content app-panel">
           <div className="registration__contentInner">
             <div className="registration__header">
-              <div className="registration__logo registration__logo--dark">
-                POCKE
-              </div>
-
+              <div className="registration__logo registration__logo--dark">POCKE</div>
               <h1 className="registration__title">Welcome Back</h1>
             </div>
 
@@ -159,10 +118,7 @@ export const Login = () => {
 
             <form className="registration__form" onSubmit={handleSubmit}>
               <div className="registration__field">
-                <label className="registration__label" htmlFor="login-email">
-                  Email
-                </label>
-
+                <label className="registration__label" htmlFor="login-email">Email</label>
                 <input
                   id="login-email"
                   type="email"
@@ -171,18 +127,13 @@ export const Login = () => {
                   onChange={handleChange}
                   className="registration__input"
                   placeholder="Your Email"
+                  autoComplete="email"
                 />
-
-                {errors.email && (
-                  <p className="registration__error">{errors.email}</p>
-                )}
+                {errors.email && <p className="registration__error">{errors.email}</p>}
               </div>
 
               <div className="registration__field">
-                <label className="registration__label" htmlFor="login-password">
-                  Password
-                </label>
-
+                <label className="registration__label" htmlFor="login-password">Password</label>
                 <div className="registration__passwordWrapper">
                   <input
                     id="login-password"
@@ -192,8 +143,8 @@ export const Login = () => {
                     onChange={handleChange}
                     className="registration__input registration__input--password"
                     placeholder="Password"
+                    autoComplete="current-password"
                   />
-
                   <button
                     type="button"
                     className="registration__passwordToggle"
@@ -203,24 +154,21 @@ export const Login = () => {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-
-                {errors.password && (
-                  <p className="registration__error">{errors.password}</p>
-                )}
+                {errors.password && <p className="registration__error">{errors.password}</p>}
               </div>
 
-              <button type="submit" className="registration__submit app-button">
-                Sign In
+              <button
+                type="submit"
+                className="registration__submit app-button"
+                disabled={submitting}
+              >
+                {submitting ? "Signing in…" : "Sign In"}
               </button>
             </form>
 
             <p className="registration__footer">
-              <span className="registration__footerText">
-                Don&apos;t have an account?
-              </span>{" "}
-              <Link to="/registration" className="registration__footerLink">
-                Sign Up
-              </Link>
+              <span className="registration__footerText">Don&apos;t have an account?</span>{" "}
+              <Link to="/registration" className="registration__footerLink">Sign Up</Link>
             </p>
           </div>
         </main>

@@ -1,25 +1,15 @@
 import { useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
-import { saveJSON, STORAGE_KEYS } from "../utils/storage";
+import { useData } from "./DataContext";
 
-const EXPENSE_CATEGORIES = [
-  "Food", "Transport", "Entertainment", "Bills", "Shopping",
-  "Education", "Health", "Subscriptions", "Other",
-];
-const INCOME_CATEGORIES = [
-  "Salary", "Freelance", "Gift", "Scholarship", "Refund", "Investment", "Other",
-];
+const EXPENSE_CATEGORIES = ["Food","Transport","Entertainment","Bills","Shopping","Education","Health","Subscriptions","Other"];
+const INCOME_CATEGORIES = ["Salary","Freelance","Gift","Scholarship","Refund","Investment","Other"];
 
-export const AddTransactionForm = ({
-  transactions,
-  onTransactionsChange,
-  customExpCat,
-  customIncCat,
-  onCategoriesChange,
-}) => {
+export const AddTransactionForm = ({ customExpCat = [], customIncCat = [], onCategoriesChange }) => {
   const { currencyInfo, formatMoney } = useSettings();
   const { showToast } = useToast();
+  const { addTransaction } = useData();
 
   const [txForm, setTxForm] = useState({
     type: "expense",
@@ -30,17 +20,14 @@ export const AddTransactionForm = ({
   });
   const [newCategory, setNewCategory] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const allExpCat = [...EXPENSE_CATEGORIES, ...customExpCat];
   const allIncCat = [...INCOME_CATEGORIES, ...customIncCat];
   const currentCategories = txForm.type === "expense" ? allExpCat : allIncCat;
 
   const handleTypeSwitch = (type) => {
-    setTxForm((p) => ({
-      ...p,
-      type,
-      category: type === "expense" ? "Food" : "Salary",
-    }));
+    setTxForm((p) => ({ ...p, type, category: type === "expense" ? "Food" : "Salary" }));
     setShowNewCategory(false);
     setNewCategory("");
   };
@@ -63,17 +50,13 @@ export const AddTransactionForm = ({
     }
     const updated = [...current, name];
     onCategoriesChange(isExpense ? "expense" : "income", updated);
-    saveJSON(
-      isExpense ? STORAGE_KEYS.EXPENSE_CATS : STORAGE_KEYS.INCOME_CATS,
-      updated
-    );
     setTxForm((p) => ({ ...p, category: name }));
     setShowNewCategory(false);
     setNewCategory("");
     showToast(`Added category "${name}"`, { type: "success" });
   };
 
-  const handleAddTransaction = () => {
+  const handleAddTransaction = async () => {
     if (!txForm.name.trim()) {
       showToast("Please enter a transaction name", { type: "error" });
       return;
@@ -83,29 +66,31 @@ export const AddTransactionForm = ({
       return;
     }
 
-    const newTx = {
-      id: `tx_${Date.now()}`,
-      type: txForm.type,
-      name: txForm.name.trim(),
-      category: txForm.category,
-      amount: Number(txForm.amount),
-      date: txForm.date,
-    };
-    const updated = [newTx, ...transactions];
-    onTransactionsChange(updated);
-    saveJSON(STORAGE_KEYS.TRANSACTIONS, updated);
-
-    setTxForm({
-      type: txForm.type,
-      name: "",
-      amount: "",
-      category: txForm.type === "expense" ? "Food" : "Salary",
-      date: new Date().toISOString().slice(0, 16),
-    });
-    showToast(
-      `${txForm.type === "expense" ? "Expense" : "Income"} added: ${formatMoney(Number(newTx.amount))}`,
-      { type: "success" }
-    );
+    setSubmitting(true);
+    try {
+      const created = await addTransaction({
+        type: txForm.type,
+        name: txForm.name.trim(),
+        category: txForm.category,
+        amount: Number(txForm.amount),
+        date: new Date(txForm.date).toISOString(),
+      });
+      setTxForm({
+        type: txForm.type,
+        name: "",
+        amount: "",
+        category: txForm.type === "expense" ? "Food" : "Salary",
+        date: new Date().toISOString().slice(0, 16),
+      });
+      showToast(
+        `${txForm.type === "expense" ? "Expense" : "Income"} added: ${formatMoney(Number(created.amount))}`,
+        { type: "success" }
+      );
+    } catch (err) {
+      showToast(err?.body?.error || "Could not add transaction", { type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -116,16 +101,12 @@ export const AddTransactionForm = ({
           className={`tx-type-btn ${txForm.type === "expense" ? "tx-type-btn--active tx-type-btn--expense" : ""}`}
           onClick={() => handleTypeSwitch("expense")}
           aria-pressed={txForm.type === "expense"}
-        >
-          Expense
-        </button>
+        >Expense</button>
         <button
           className={`tx-type-btn ${txForm.type === "income" ? "tx-type-btn--active tx-type-btn--income" : ""}`}
           onClick={() => handleTypeSwitch("income")}
           aria-pressed={txForm.type === "income"}
-        >
-          Income
-        </button>
+        >Income</button>
       </div>
       <div className="tx-form">
         <input
@@ -198,8 +179,13 @@ export const AddTransactionForm = ({
           className="tx-input"
           aria-label="Date and time"
         />
-        <button type="button" className="tx-submit" onClick={handleAddTransaction}>
-          Add Transaction
+        <button
+          type="button"
+          className="tx-submit"
+          onClick={handleAddTransaction}
+          disabled={submitting}
+        >
+          {submitting ? "Adding…" : "Add Transaction"}
         </button>
       </div>
     </div>

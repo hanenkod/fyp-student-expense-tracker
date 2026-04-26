@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
-import { saveJSON, STORAGE_KEYS } from "../utils/storage";
+import { useData } from "./DataContext";
 
 const PRESET_SERVICES = [
   { name: "Spotify", amount: 10.99 },
@@ -14,9 +14,10 @@ const PRESET_SERVICES = [
   { name: "iCloud+", amount: 2.99 },
 ];
 
-export const AddScheduledPaymentForm = ({ scheduled, onScheduledChange }) => {
+export const AddScheduledPaymentForm = () => {
   const { currencyInfo } = useSettings();
   const { showToast } = useToast();
+  const { addScheduled } = useData();
 
   const [spForm, setSpForm] = useState({
     preset: "",
@@ -26,6 +27,7 @@ export const AddScheduledPaymentForm = ({ scheduled, onScheduledChange }) => {
     startDate: new Date().toISOString().split("T")[0],
   });
   const [showCustomService, setShowCustomService] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handlePresetSelect = (preset) => {
     if (preset === "__custom") {
@@ -40,7 +42,7 @@ export const AddScheduledPaymentForm = ({ scheduled, onScheduledChange }) => {
     }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!spForm.name.trim()) {
       showToast("Please select or enter a service name", { type: "error" });
       return;
@@ -49,26 +51,28 @@ export const AddScheduledPaymentForm = ({ scheduled, onScheduledChange }) => {
       showToast("Amount must be greater than zero", { type: "error" });
       return;
     }
-    const newSub = {
-      id: `sp_${Date.now()}`,
-      name: spForm.name.trim(),
-      amount: Number(spForm.amount),
-      frequency: spForm.frequency,
-      startDate: spForm.startDate,
-    };
-    const updated = [...scheduled, newSub];
-    onScheduledChange(updated);
-    saveJSON(STORAGE_KEYS.SCHEDULED, updated);
-
-    setSpForm({
-      preset: "",
-      name: "",
-      amount: "",
-      frequency: "monthly",
-      startDate: new Date().toISOString().split("T")[0],
-    });
-    setShowCustomService(false);
-    showToast(`Subscription added: ${newSub.name}`, { type: "success" });
+    setSubmitting(true);
+    try {
+      const created = await addScheduled({
+        name: spForm.name.trim(),
+        amount: Number(spForm.amount),
+        frequency: spForm.frequency,
+        startDate: new Date(spForm.startDate).toISOString(),
+      });
+      setSpForm({
+        preset: "",
+        name: "",
+        amount: "",
+        frequency: "monthly",
+        startDate: new Date().toISOString().split("T")[0],
+      });
+      setShowCustomService(false);
+      showToast(`Subscription added: ${created.name}`, { type: "success" });
+    } catch (err) {
+      showToast(err?.body?.error || "Could not add subscription", { type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -135,8 +139,13 @@ export const AddScheduledPaymentForm = ({ scheduled, onScheduledChange }) => {
           aria-label="Start date"
         />
 
-        <button type="button" className="tx-submit" onClick={handleAdd}>
-          Add Scheduled Payment
+        <button
+          type="button"
+          className="tx-submit"
+          onClick={handleAdd}
+          disabled={submitting}
+        >
+          {submitting ? "Adding…" : "Add Scheduled Payment"}
         </button>
       </div>
     </div>

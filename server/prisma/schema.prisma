@@ -1,0 +1,91 @@
+// Prisma schema for POCKE — Student Expense Tracker
+// Generated from the LocalStorage shapes used by the existing frontend.
+// Switch the datasource provider to "postgresql" and re-migrate when ready
+// to deploy to a managed Postgres host (e.g. Railway, Render, Supabase).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hash, never plaintext
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Onboarding fields collapsed into the user (1:1 was overkill).
+  income      Float    @default(0)
+  expenses    Float    @default(0)
+  onboarded   Boolean  @default(false)
+
+  // User preferences stored as a JSON blob string. Schema is loose
+  // (theme, currency, etc.) and parsed on the frontend.
+  settingsJson String?
+
+  // Custom categories the user has added.
+  customExpenseCategories String? // JSON array
+  customIncomeCategories  String? // JSON array
+
+  transactions      Transaction[]
+  scheduledPayments ScheduledPayment[]
+  goals             SavingsGoal[]
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      String   // "expense" | "income"
+  name      String
+  category  String
+  amount    Float
+  date      DateTime
+
+  // For savings-related transactions: marks the source and links the goal.
+  source    String?  // e.g. "savings"
+  goalId    String?  // soft reference; deleting a goal does not cascade
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+  @@index([userId, type])
+}
+
+model ScheduledPayment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  amount    Float
+  frequency String   // "weekly" | "monthly" | "yearly"
+  startDate DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model SavingsGoal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  icon      String   @default("🎯")
+  target    Float
+  saved     Float    @default(0)
+  color     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

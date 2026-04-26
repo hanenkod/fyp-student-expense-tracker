@@ -7,7 +7,8 @@ import { SafeToSpendCard } from "./SafeToSpendCard";
 import { MetricCard } from "./MetricCard";
 import { TrendArrow } from "./TrendArrow";
 import { useSettings } from "./SettingsContext";
-import { getStoredJSON, STORAGE_KEYS } from "../utils/storage";
+import { useAuth } from "./AuthContext";
+import { useData } from "./DataContext";
 
 import "../styles/style.css";
 import "../styles/dashboard.css";
@@ -22,11 +23,27 @@ export const Dashboard = () => {
   const formatCurrency = formatMoney;
   const formatCurrencyFixed = (v) => formatMoney(v, { minFractionDigits: 2, maxFractionDigits: 2 });
 
-  const onboardingData = getStoredJSON(STORAGE_KEYS.ONBOARDING, {});
-  const userData = getStoredJSON(STORAGE_KEYS.USER, {});
-  const allTransactions = getStoredJSON(STORAGE_KEYS.TRANSACTIONS, []);
-  const scheduledPayments = getStoredJSON(STORAGE_KEYS.SCHEDULED, []);
-  const savingsGoals = getStoredJSON(STORAGE_KEYS.GOALS, []);
+  const { user } = useAuth();
+  const { transactions: allTransactions, scheduled: scheduledPayments, goals: savingsGoals, loading } = useData();
+
+  // Onboarding/user fields are now part of the user record on the server.
+  const onboardingData = { income: user?.income || 0, expenses: user?.expenses || 0 };
+  const userData = { name: user?.name, email: user?.email };
+
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div className="app-shell">
+          <div className="layout">
+            <Sidebar />
+            <main className="content" style={{ display: "grid", placeItems: "center", minHeight: "60vh", color: "#9391a0" }}>
+              Loading…
+            </main>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const income = Number(onboardingData.income || 0);
 

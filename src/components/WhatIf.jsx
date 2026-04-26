@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
-import { getStoredJSON, STORAGE_KEYS } from "../utils/storage";
+import { useAuth } from "./AuthContext";
+import { useData } from "./DataContext";
 import "../styles/style.css";
 import "../styles/whatif.css";
 
@@ -26,10 +27,25 @@ export const WhatIf = () => {
   const { formatMoney, currencyInfo } = useSettings();
   const { showToast } = useToast();
 
-  const onboardingData = getStoredJSON(STORAGE_KEYS.ONBOARDING, {});
-  const allTransactions = getStoredJSON(STORAGE_KEYS.TRANSACTIONS, []);
-  const scheduledPayments = getStoredJSON(STORAGE_KEYS.SCHEDULED, []);
-  const goals = getStoredJSON(STORAGE_KEYS.GOALS, []);
+  const { user } = useAuth();
+  const { transactions: allTransactions, scheduled: scheduledPayments, goals, loading } = useData();
+
+  const onboardingData = { income: user?.income || 0, expenses: user?.expenses || 0 };
+
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div className="app-shell">
+          <div className="layout">
+            <Sidebar />
+            <main className="content" style={{ display: "grid", placeItems: "center", minHeight: "60vh", color: "#9391a0" }}>
+              Loading…
+            </main>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const baseIncome = Number(onboardingData.income || 0);
 
