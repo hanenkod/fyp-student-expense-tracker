@@ -1,3 +1,10 @@
+/**
+ * TransactionList — right-column panel on the Transactions page.
+ *
+ * Tabbed view: "Transactions" lists every entry with type/date/search
+ * filters; "Scheduled" lists active subscriptions with a monthly total.
+ * Each row supports inline edit and delete with toast notifications.
+ */
 import { useState, useMemo } from "react";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";

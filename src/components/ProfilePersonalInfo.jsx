@@ -1,3 +1,11 @@
+/**
+ * ProfilePersonalInfo — editable name/email/income card plus a
+ * password-change form.
+ *
+ * Both forms validate locally before hitting the API. Server errors
+ * (email collision, wrong current password) are mapped to field-level
+ * messages on the relevant input so the user knows where to look.
+ */
 import { useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";

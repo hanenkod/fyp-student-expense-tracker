@@ -1,3 +1,10 @@
+/**
+ * JSON Web Token helpers.
+ *
+ * Tokens carry only the user id in the `sub` claim. Every authenticated
+ * request looks the user up by id, so we never have stale data baked
+ * into a token (such as a name change that hasn't propagated).
+ */
 import jwt from "jsonwebtoken";
 
 const SECRET = process.env.JWT_SECRET;
@@ -8,15 +15,20 @@ if (!SECRET) {
 }
 
 /**
- * Sign a JWT for a given user id.
- * Token payload is intentionally minimal — we look up the user by id
- * on every request, so no stale data ends up in tokens.
+ * Sign a JWT for the given user id.
+ *
+ * @param {string} userId
+ * @returns {string} signed JWT
  */
 export const signToken = (userId) =>
   jwt.sign({ sub: userId }, SECRET, { expiresIn: EXPIRES_IN });
 
 /**
- * Verify a JWT and return its decoded payload, or null if invalid/expired.
+ * Verify a JWT and return its decoded payload.
+ *
+ * @param {string} token
+ * @returns {object|null} decoded payload, or null if the token is
+ *   missing, malformed, or expired.
  */
 export const verifyToken = (token) => {
   try {

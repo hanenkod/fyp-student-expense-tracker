@@ -1,3 +1,13 @@
+/**
+ * SavingsGoals — left-column card on the Transactions page.
+ *
+ * Lists the user's goals with progress bars and exposes the four
+ * actions: create new, contribute (£10 / £50 / £100 buttons),
+ * withdraw, and delete. Add and withdraw call the dedicated
+ * /api/goals/:id/add and /withdraw endpoints, which atomically
+ * write a matching expense/income transaction so the user's
+ * totals stay consistent.
+ */
 import { useState } from "react";
 import { SavingsPanel } from "./SavingsPanel";
 import { ConfirmModal } from "./ConfirmModal";

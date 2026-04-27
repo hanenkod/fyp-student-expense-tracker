@@ -1,28 +1,62 @@
+/**
+ * ToastContext — minimal toast notification system.
+ *
+ * Toasts auto-dismiss after `duration` ms (default 3 seconds) and can
+ * also carry an action button — used for "Undo" on destructive ops.
+ *
+ * Usage:
+ *   const { showToast } = useToast();
+ *   showToast("Saved", { type: "success" });
+ *   showToast("Deleted", {
+ *     action: { label: "Undo", onClick: () => restore() },
+ *   });
+ */
 import { createContext, useContext, useState, useCallback } from "react";
 
 const ToastContext = createContext(null);
 
 let toastIdCounter = 0;
 
+/** Map a toast type to its default leading glyph. */
 const defaultIcon = (type) => {
   switch (type) {
-    case "success": return "✓";
-    case "error": return "✕";
-    case "warning": return "!";
-    default: return "i";
+    case "success":
+      return "✓";
+    case "error":
+      return "✕";
+    case "warning":
+      return "!";
+    default:
+      return "i";
   }
 };
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
+  /**
+   * Mark a toast as leaving (triggers fade-out animation), then remove
+   * it from state once the animation has finished.
+   */
   const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, leaving: true } : t)));
+    setToasts((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, leaving: true } : t))
+    );
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 300);
   }, []);
 
+  /**
+   * Show a new toast.
+   *
+   * @param {string} message
+   * @param {object} [options]
+   * @param {"success"|"error"|"warning"|"info"} [options.type="info"]
+   * @param {number} [options.duration=3000]  auto-dismiss after ms; 0 disables
+   * @param {string} [options.icon]           override the default icon
+   * @param {{label:string,onClick:()=>void}} [options.action]
+   */
   const showToast = useCallback(
     (message, options = {}) => {
       const { type = "info", duration = 3000, icon, action } = options;

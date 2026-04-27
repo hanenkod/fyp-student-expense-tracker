@@ -1,3 +1,10 @@
+/**
+ * Application shell.
+ *
+ * Wraps the React Router tree in the two app-wide context providers
+ * (auth, then data — DataProvider depends on AuthProvider) and defines
+ * every route, each gated by the appropriate RouteGuard.
+ */
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
 import { DataProvider } from "./components/DataContext";
@@ -20,87 +27,85 @@ function App() {
     <AuthProvider>
       <DataProvider>
         <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/registration" replace />} />
+          <Routes>
+            <Route path="/" element={<Navigate to="/registration" replace />} />
 
-          <Route
-            path="/registration"
-            element={
-              <AuthOnlyRoute>
-                <Registration />
-              </AuthOnlyRoute>
-            }
-          />
+            <Route
+              path="/registration"
+              element={
+                <AuthOnlyRoute>
+                  <Registration />
+                </AuthOnlyRoute>
+              }
+            />
 
-          <Route
-            path="/login"
-            element={
-              <AuthOnlyRoute>
-                <Login />
-              </AuthOnlyRoute>
-            }
-          />
+            <Route
+              path="/login"
+              element={
+                <AuthOnlyRoute>
+                  <Login />
+                </AuthOnlyRoute>
+              }
+            />
 
-          <Route
-            path="/onboarding"
-            element={
-              <ProtectedOnboardingRoute>
-                <Onboarding />
-              </ProtectedOnboardingRoute>
-            }
-          />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedOnboardingRoute>
+                  <Onboarding />
+                </ProtectedOnboardingRoute>
+              }
+            />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedDashboardRoute>
-                <Dashboard />
-              </ProtectedDashboardRoute>
-            }
-          />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedDashboardRoute>
+                  <Dashboard />
+                </ProtectedDashboardRoute>
+              }
+            />
 
-          <Route
-            path="/transactions"
-            element={
-              <ProtectedDashboardRoute>
-                <Transactions />
-              </ProtectedDashboardRoute>
-            }
-          />
+            <Route
+              path="/transactions"
+              element={
+                <ProtectedDashboardRoute>
+                  <Transactions />
+                </ProtectedDashboardRoute>
+              }
+            />
 
-          <Route
-            path="/whatif"
-            element={
-              <ProtectedDashboardRoute>
-                <WhatIf />
-              </ProtectedDashboardRoute>
-            }
-          />
+            <Route
+              path="/whatif"
+              element={
+                <ProtectedDashboardRoute>
+                  <WhatIf />
+                </ProtectedDashboardRoute>
+              }
+            />
 
-          <Route
-            path="/analytics"
-            element={<Navigate to="/whatif" replace />}
-          />
+            {/* Legacy redirect — analytics page was renamed to whatif. */}
+            <Route path="/analytics" element={<Navigate to="/whatif" replace />} />
 
-          <Route
-            path="/settings"
-            element={
-              <ProtectedDashboardRoute>
-                <Settings />
-              </ProtectedDashboardRoute>
-            }
-          />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedDashboardRoute>
+                  <Settings />
+                </ProtectedDashboardRoute>
+              }
+            />
 
-          <Route
-            path="/profile"
-            element={
-              <ProtectedDashboardRoute>
-                <Profile />
-              </ProtectedDashboardRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+            <Route
+              path="/profile"
+              element={
+                <ProtectedDashboardRoute>
+                  <Profile />
+                </ProtectedDashboardRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
       </DataProvider>
     </AuthProvider>
   );

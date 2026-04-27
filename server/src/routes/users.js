@@ -1,3 +1,9 @@
+/**
+ * User account routes.
+ *
+ * Every endpoint here requires authentication. Operations are scoped
+ * to the calling user's record; we never expose another user's data.
+ */
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import { z } from "zod";
@@ -9,6 +15,10 @@ const router = Router();
 
 router.use(requireAuth);
 
+/**
+ * Field whitelist used by every "return user" response so we never
+ * accidentally leak the password hash.
+ */
 const PUBLIC_USER_FIELDS = {
   id: true,
   email: true,
@@ -24,7 +34,7 @@ const PUBLIC_USER_FIELDS = {
 
 /**
  * GET /api/users/me
- * Returns the authenticated user's full profile (without password).
+ * Returns the authenticated user's profile (without password).
  */
 router.get(
   "/me",
@@ -51,7 +61,8 @@ const updateProfileSchema = z.object({
 
 /**
  * PATCH /api/users/me
- * Partial update of profile fields. Email collisions return 409.
+ * Partial update of profile fields. Email collisions surface as 409
+ * via the Prisma P2002 handler in errors.js.
  */
 router.patch(
   "/me",
@@ -74,7 +85,7 @@ const passwordSchema = z.object({
 
 /**
  * POST /api/users/me/password
- * Verifies current password, then updates to the new hash.
+ * Verifies the current password, then writes a new bcrypt hash.
  */
 router.post(
   "/me/password",
@@ -84,18 +95,23 @@ router.post(
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const ok = await bcrypt.compare(current, user.password);
-    if (!ok) return res.status(401).json({ error: "Current password is incorrect" });
+    if (!ok) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
 
     const hash = await bcrypt.hash(newPassword, 12);
-    await prisma.user.update({ where: { id: req.userId }, data: { password: hash } });
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { password: hash },
+    });
     res.json({ ok: true });
   })
 );
 
 /**
  * DELETE /api/users/me
- * Permanently deletes the user's account and all related data
- * (cascades via Prisma onDelete).
+ * Permanently deletes the user's account and all related rows.
+ * Cascades are configured on the relations in schema.prisma.
  */
 router.delete(
   "/me",
@@ -106,21 +122,11 @@ router.delete(
 );
 
 /**
- * POST /api/users/me/migrate
- * One-shot migration of the LocalStorage payload sent from the frontend.
- * Wraps everything in a transaction so partial failures don't leave the
- * user with half-imported data.
+ * Schema for the one-shot LocalStorage migration payload.
  *
- * Body shape (all keys optional):
- *   {
- *     onboarding: { income, expenses, completed },
- *     settings: <any object>,
- *     customExpenseCategories: [],
- *     customIncomeCategories: [],
- *     transactions: [{ id?, type, name, category, amount, date, source?, goalId? }],
- *     scheduledPayments: [{ id?, name, amount, frequency, startDate }],
- *     goals: [{ id?, title, icon?, target, saved?, color? }]
- *   }
+ * All keys are optional so legacy users with partial state can still
+ * migrate cleanly. The frontend only sends fields that actually exist
+ * in their browser.
  */
 const migrateSchema = z.object({
   onboarding: z
@@ -169,21 +175,44 @@ const migrateSchema = z.object({
     .optional(),
 });
 
+/**
+ * POST /api/users/me/migrate
+ * One-shot import of LocalStorage data sent by the frontend after the
+ * first login post-backend release. The whole import runs inside a
+ * single Prisma transaction so a partial failure (e.g. one bad row)
+ * leaves the user with no half-imported data.
+ */
 router.post(
   "/me/migrate",
   asyncHandler(async (req, res) => {
     const payload = migrateSchema.parse(req.body);
 
     await prisma.$transaction(async (tx) => {
+      // Build the user-record patch from whichever optional fields
+      // were included in the payload.
       const updates = {};
-      if (payload.onboarding?.income !== undefined) updates.income = payload.onboarding.income;
-      if (payload.onboarding?.expenses !== undefined) updates.expenses = payload.onboarding.expenses;
-      if (payload.onboarding?.completed) updates.onboarded = true;
-      if (payload.settings) updates.settingsJson = JSON.stringify(payload.settings);
-      if (payload.customExpenseCategories)
-        updates.customExpenseCategories = JSON.stringify(payload.customExpenseCategories);
-      if (payload.customIncomeCategories)
-        updates.customIncomeCategories = JSON.stringify(payload.customIncomeCategories);
+      if (payload.onboarding?.income !== undefined) {
+        updates.income = payload.onboarding.income;
+      }
+      if (payload.onboarding?.expenses !== undefined) {
+        updates.expenses = payload.onboarding.expenses;
+      }
+      if (payload.onboarding?.completed) {
+        updates.onboarded = true;
+      }
+      if (payload.settings) {
+        updates.settingsJson = JSON.stringify(payload.settings);
+      }
+      if (payload.customExpenseCategories) {
+        updates.customExpenseCategories = JSON.stringify(
+          payload.customExpenseCategories
+        );
+      }
+      if (payload.customIncomeCategories) {
+        updates.customIncomeCategories = JSON.stringify(
+          payload.customIncomeCategories
+        );
+      }
       if (Object.keys(updates).length > 0) {
         await tx.user.update({ where: { id: req.userId }, data: updates });
       }

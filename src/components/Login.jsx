@@ -1,3 +1,13 @@
+/**
+ * Login page.
+ *
+ * Validates the form, calls useAuth().login(), and redirects to either
+ * /dashboard or /onboarding depending on whether the user has finished
+ * setup. Server errors (401, 400, network) are surfaced as inline
+ * field messages so the layout doesn't jump.
+ *
+ * Google and Apple buttons are visual placeholders for the FYP MVP.
+ */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";

@@ -1,4 +1,14 @@
-import { useState } from "react";
+/**
+ * Transactions page — composes the four feature panels (add tx, add
+ * subscription, savings goals, transaction list) and owns the local
+ * state for the user's custom categories.
+ *
+ * The custom category lists are stored as JSON-encoded strings on the
+ * server (User.customExpenseCategories / customIncomeCategories). This
+ * component decodes them defensively, syncs local state with the user
+ * record whenever it changes, and pushes updates back via the API.
+ */
+import { useEffect, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { AddTransactionForm } from "./AddTransactionForm";
 import { AddScheduledPaymentForm } from "./AddScheduledPaymentForm";
@@ -10,31 +20,51 @@ import { api } from "../utils/api";
 import "../styles/style.css";
 import "../styles/transactions.css";
 
+/**
+ * Decode a JSON-encoded array string from the server, returning [] for
+ * null, undefined, or malformed input. Without this guard a corrupt row
+ * would crash the entire page.
+ */
+const parseCategoryList = (raw) => {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export const Transactions = () => {
   const { user, setUser } = useAuth();
   const { loading } = useData();
 
-  // Custom categories live on the user record (settingsJson would also work,
-  // but we kept dedicated columns to keep things simple).
-  const customExpCat = user?.customExpenseCategories
-    ? JSON.parse(user.customExpenseCategories)
-    : [];
-  const customIncCat = user?.customIncomeCategories
-    ? JSON.parse(user.customIncomeCategories)
-    : [];
+  // Local copies of the user's custom categories. Initialised from the
+  // user record and resynced via useEffect when the user changes.
+  const [expCats, setExpCats] = useState([]);
+  const [incCats, setIncCats] = useState([]);
 
-  // Local copies that we sync to the API on change.
-  const [expCats, setExpCats] = useState(customExpCat);
-  const [incCats, setIncCats] = useState(customIncCat);
+  useEffect(() => {
+    setExpCats(parseCategoryList(user?.customExpenseCategories));
+    setIncCats(parseCategoryList(user?.customIncomeCategories));
+  }, [user?.customExpenseCategories, user?.customIncomeCategories]);
 
+  /**
+   * Persist a category list change to the server and update local state.
+   * Called by AddTransactionForm whenever the user adds a new category.
+   */
   const handleCategoriesChange = async (kind, updated) => {
     if (kind === "expense") {
       setExpCats(updated);
-      const u = await api.updateMe({ customExpenseCategories: JSON.stringify(updated) });
+      const u = await api.updateMe({
+        customExpenseCategories: JSON.stringify(updated),
+      });
       setUser(u);
     } else {
       setIncCats(updated);
-      const u = await api.updateMe({ customIncomeCategories: JSON.stringify(updated) });
+      const u = await api.updateMe({
+        customIncomeCategories: JSON.stringify(updated),
+      });
       setUser(u);
     }
   };
@@ -45,7 +75,15 @@ export const Transactions = () => {
         <div className="app-shell">
           <div className="layout">
             <Sidebar />
-            <main className="content" style={{ display: "grid", placeItems: "center", minHeight: "60vh", color: "#9391a0" }}>
+            <main
+              className="content"
+              style={{
+                display: "grid",
+                placeItems: "center",
+                minHeight: "60vh",
+                color: "#9391a0",
+              }}
+            >
               Loading…
             </main>
           </div>
@@ -64,7 +102,9 @@ export const Transactions = () => {
               <div className="overview-bar">
                 <div className="overview-text stack-5">
                   <h1 className="overview-title">Transactions</h1>
-                  <p className="overview-subtitle">Manage your transactions, subscriptions and savings</p>
+                  <p className="overview-subtitle">
+                    Manage your transactions, subscriptions and savings
+                  </p>
                 </div>
               </div>
             </header>

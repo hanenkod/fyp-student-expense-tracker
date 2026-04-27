@@ -1,3 +1,12 @@
+/**
+ * Registration page.
+ *
+ * Validates the form, calls useAuth().register(), and routes new
+ * accounts to /onboarding. The 409 "email already exists" case is
+ * mapped to a field-level error on the email input.
+ *
+ * Google and Apple buttons are visual placeholders for the FYP MVP.
+ */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";

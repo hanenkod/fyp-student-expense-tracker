@@ -1,3 +1,13 @@
+/**
+ * ProfileFinancialSummary — four-tile dashboard plus an income-vs-
+ * spending flow bar and a monthly-budget progress bar.
+ *
+ * All numbers are passed in as props so this component is pure
+ * presentation. The "today" marker on the budget bar sits at the
+ * proportional position of today's date within the current month —
+ * any progress fill above the marker means the user is overspending
+ * relative to the calendar.
+ */
 import { useSettings } from "./SettingsContext";
 
 export const ProfileFinancialSummary = ({

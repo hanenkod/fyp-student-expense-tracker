@@ -1,3 +1,10 @@
+/**
+ * Transaction CRUD routes.
+ *
+ * Every endpoint requires authentication and only operates on rows
+ * owned by the calling user — even on PATCH/DELETE we double-check
+ * the row's userId before mutating it.
+ */
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
@@ -12,11 +19,15 @@ const txSchema = z.object({
   name: z.string().min(1).trim(),
   category: z.string().min(1).trim(),
   amount: z.number().positive(),
-  date: z.string(),  // ISO string
+  date: z.string(), // ISO 8601 string from the frontend
   source: z.string().optional(),
   goalId: z.string().optional(),
 });
 
+/**
+ * GET /api/transactions
+ * Returns every transaction belonging to the user, newest first.
+ */
 router.get(
   "/",
   asyncHandler(async (req, res) => {
@@ -28,6 +39,10 @@ router.get(
   })
 );
 
+/**
+ * POST /api/transactions
+ * Creates a new transaction.
+ */
 router.post(
   "/",
   asyncHandler(async (req, res) => {
@@ -48,6 +63,10 @@ router.post(
   })
 );
 
+/**
+ * PATCH /api/transactions/:id
+ * Partial update. Only the row owner may patch.
+ */
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
@@ -70,6 +89,10 @@ router.patch(
   })
 );
 
+/**
+ * DELETE /api/transactions/:id
+ * Removes a single transaction owned by the caller.
+ */
 router.delete(
   "/:id",
   asyncHandler(async (req, res) => {

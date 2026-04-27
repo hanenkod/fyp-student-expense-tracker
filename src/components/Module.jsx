@@ -1,3 +1,10 @@
+/**
+ * Module — generic onboarding step card.
+ *
+ * Reusable layout used by both onboarding steps: title + description,
+ * an optional input, and a Next button. Each step controls its own
+ * value/onChange/onNext via props.
+ */
 import "../styles/module.css";
 
 export const Module = ({

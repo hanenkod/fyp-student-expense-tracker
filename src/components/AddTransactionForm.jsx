@@ -1,3 +1,11 @@
+/**
+ * AddTransactionForm — left-column card on the Transactions page.
+ *
+ * Lets the user enter an expense or income with name, amount,
+ * category and date. Categories combine a built-in list with the
+ * user's custom additions; new categories can be added inline
+ * without leaving the form.
+ */
 import { useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";

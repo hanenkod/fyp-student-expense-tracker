@@ -1,3 +1,10 @@
+/**
+ * SavingsPanel — small reusable goal card.
+ *
+ * Shows a goal title, the amount saved, the target, a percentage, and
+ * a progress bar. Used in the SavingsGoals list and elsewhere where a
+ * compact representation of a goal is needed.
+ */
 import { ProgressBar } from "./ProgressBar";
 
 export const SavingsPanel = ({

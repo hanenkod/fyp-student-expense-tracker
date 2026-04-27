@@ -1,3 +1,10 @@
+/**
+ * AddScheduledPaymentForm — left-column card on the Transactions page.
+ *
+ * Subscription/recurring payment entry with a quick-pick list of
+ * common services (Spotify, Netflix, etc.) for one-tap setup, plus
+ * a "Custom service" option for anything not in the preset list.
+ */
 import { useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";

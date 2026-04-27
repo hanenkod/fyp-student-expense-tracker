@@ -1,3 +1,11 @@
+/**
+ * Dashboard — the main landing page after login.
+ *
+ * Composes the headline "Safe to spend today" card, monthly budget
+ * progress, recent transactions list, savings goals snapshot, and a
+ * 7-day spending bar chart. All data comes from useData() (transactions,
+ * scheduled payments, goals) and useAuth() (income, name).
+ */
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Card, CardHeader, CardContent, CardFooter } from "./Card";

@@ -1,3 +1,10 @@
+/**
+ * Scheduled payment (subscription) routes.
+ *
+ * Currently supports list, create and delete. Patch is not exposed
+ * because the frontend always recreates a subscription rather than
+ * editing one in place.
+ */
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
@@ -14,6 +21,10 @@ const spSchema = z.object({
   startDate: z.string(),
 });
 
+/**
+ * GET /api/scheduled
+ * Lists subscriptions in reverse creation order.
+ */
 router.get(
   "/",
   asyncHandler(async (req, res) => {
@@ -25,6 +36,10 @@ router.get(
   })
 );
 
+/**
+ * POST /api/scheduled
+ * Creates a new subscription.
+ */
 router.post(
   "/",
   asyncHandler(async (req, res) => {
@@ -42,6 +57,9 @@ router.post(
   })
 );
 
+/**
+ * DELETE /api/scheduled/:id
+ */
 router.delete(
   "/:id",
   asyncHandler(async (req, res) => {

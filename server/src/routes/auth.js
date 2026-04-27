@@ -1,3 +1,9 @@
+/**
+ * Authentication routes — registration and login.
+ *
+ * Passwords are stored as bcrypt hashes (cost factor 12). On success
+ * each endpoint returns a JWT plus the public-safe user record.
+ */
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import { z } from "zod";
@@ -35,7 +41,12 @@ router.post(
     const token = signToken(user.id);
     res.status(201).json({
       token,
-      user: { id: user.id, email: user.email, name: user.name, onboarded: user.onboarded },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        onboarded: user.onboarded,
+      },
     });
   })
 );
@@ -43,6 +54,9 @@ router.post(
 /**
  * POST /api/auth/login
  * Verifies credentials and returns a JWT.
+ *
+ * The error message for both "user not found" and "wrong password" is
+ * intentionally identical to prevent email-enumeration attacks.
  */
 router.post(
   "/login",
@@ -53,7 +67,6 @@ router.post(
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      // Same message to avoid email enumeration.
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
@@ -65,7 +78,12 @@ router.post(
     const token = signToken(user.id);
     res.json({
       token,
-      user: { id: user.id, email: user.email, name: user.name, onboarded: user.onboarded },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        onboarded: user.onboarded,
+      },
     });
   })
 );

@@ -1,3 +1,11 @@
+/**
+ * ProfileBudgetTips — rule-based personalised advice cards.
+ *
+ * Generates 1–5 tips by inspecting the user's expense ratio, savings
+ * rate, top spending category and remaining days in the month. Each
+ * tip is classified as positive / info / warning so the colour
+ * accent matches its tone.
+ */
 import { useMemo } from "react";
 import { useSettings } from "./SettingsContext";
 

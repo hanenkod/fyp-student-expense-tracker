@@ -1,3 +1,11 @@
+/**
+ * Onboarding — two-step setup wizard shown to new accounts.
+ *
+ * Step 1 collects the user's monthly income with currency-aware
+ * formatting. Step 2 previews the resulting "Safe to spend today" and,
+ * on confirm, persists income/expenses and flips the user's
+ * `onboarded` flag to true via api.updateMe().
+ */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Module } from "./Module";
@@ -60,7 +68,8 @@ export const Onboarding = () => {
       navigate("/dashboard");
     } catch (err) {
       console.error("Onboarding save failed:", err);
-      // Fall through — the button just stays clickable for retry.
+      // Errors are logged but not surfaced — the button stays
+      // enabled in the finally block below so the user can retry.
     } finally {
       setSubmitting(false);
     }

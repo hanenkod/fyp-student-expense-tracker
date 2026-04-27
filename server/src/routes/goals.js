@@ -1,3 +1,10 @@
+/**
+ * Savings goal routes.
+ *
+ * Goal mutations that affect a user's balance (add, withdraw, delete-
+ * with-refund) run inside a Prisma transaction so the goal state and
+ * the bookkeeping transaction are written atomically.
+ */
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
@@ -15,6 +22,10 @@ const goalSchema = z.object({
   color: z.string().optional(),
 });
 
+/**
+ * GET /api/goals
+ * Lists the caller's goals, newest first.
+ */
 router.get(
   "/",
   asyncHandler(async (req, res) => {
@@ -26,6 +37,10 @@ router.get(
   })
 );
 
+/**
+ * POST /api/goals
+ * Creates a new goal. `icon` defaults to a generic 🎯 emoji when omitted.
+ */
 router.post(
   "/",
   asyncHandler(async (req, res) => {
@@ -44,6 +59,10 @@ router.post(
   })
 );
 
+/**
+ * PATCH /api/goals/:id
+ * Partial update of an owned goal.
+ */
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
@@ -60,6 +79,11 @@ router.patch(
   })
 );
 
+/**
+ * DELETE /api/goals/:id
+ * Deletes the goal. If the goal had money saved, that amount is
+ * refunded as an income transaction so the user's totals stay correct.
+ */
 router.delete(
   "/:id",
   asyncHandler(async (req, res) => {
@@ -69,7 +93,6 @@ router.delete(
       return res.status(404).json({ error: "Goal not found" });
     }
 
-    // Atomically: refund the saved amount as an income transaction, then delete.
     await prisma.$transaction(async (tx) => {
       if (existing.saved > 0) {
         await tx.transaction.create({
@@ -96,8 +119,9 @@ const moveSchema = z.object({ amount: z.number().positive() });
 
 /**
  * POST /api/goals/:id/add
- * Adds the given amount to the goal and creates a matching expense transaction.
- * Caps the addition so saved never exceeds target.
+ * Moves money from the user's general balance into the goal. The
+ * addition is capped so `saved` never exceeds `target`. A matching
+ * expense transaction is created in the same DB transaction.
  */
 router.post(
   "/:id/add",
@@ -111,7 +135,9 @@ router.post(
 
     const remaining = Math.max(0, goal.target - goal.saved);
     const actual = Math.min(amount, remaining);
-    if (actual <= 0) return res.status(400).json({ error: "Goal already at target" });
+    if (actual <= 0) {
+      return res.status(400).json({ error: "Goal already at target" });
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const updatedGoal = await tx.savingsGoal.update({
@@ -139,8 +165,9 @@ router.post(
 
 /**
  * POST /api/goals/:id/withdraw
- * Removes amount from the goal and records a matching income transaction.
- * Caps the withdrawal at the currently saved amount.
+ * Pulls money out of the goal back into the user's general balance.
+ * Capped at the currently saved amount. A matching income transaction
+ * is created in the same DB transaction.
  */
 router.post(
   "/:id/withdraw",
@@ -151,7 +178,9 @@ router.post(
     if (!goal || goal.userId !== req.userId) {
       return res.status(404).json({ error: "Goal not found" });
     }
-    if (goal.saved <= 0) return res.status(400).json({ error: "Nothing to withdraw" });
+    if (goal.saved <= 0) {
+      return res.status(400).json({ error: "Nothing to withdraw" });
+    }
 
     const actual = Math.min(amount, goal.saved);
 

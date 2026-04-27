@@ -1,32 +1,61 @@
+/**
+ * One-shot migration of LocalStorage data to the backend.
+ *
+ * Pre-backend versions of POCKE stored everything in LocalStorage. The
+ * very first time this browser logs into the new backend, this helper
+ * uploads the existing legacy data so it isn't lost.
+ *
+ * The migration is per-browser, not per-user. Once it has run, a
+ * global flag `pockeLegacyMigrated` is written and the helper becomes
+ * a no-op for every subsequent login or registration. This prevents
+ * legacy data being re-imported into freshly registered accounts that
+ * happen to be created in the same browser.
+ */
 import { api } from "./api.js";
 
+const MIGRATION_FLAG = "pockeLegacyMigrated";
+const LEGACY_PER_USER_PREFIX = "pockeMigrated:";
+
 /**
- * Migrates any data the user has accumulated in LocalStorage (from the
- * pre-backend version of POCKE) up to the API.
- *
- * Called once after a successful login or registration. Skips entirely
- * if the user has no legacy data, or if the migration has already been
- * marked as done in this browser.
- *
- * Once successful, sets `pockeMigrated:<userId>` in LocalStorage to
- * prevent re-uploading on subsequent logins from the same browser.
+ * Read a JSON value from LocalStorage, returning null if the key is
+ * missing or the contents are corrupt.
  */
-const MIGRATION_FLAG_PREFIX = "pockeMigrated:";
+const safeJSON = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
-export const migrateLocalStorageIfNeeded = async (userId) => {
-  if (!userId) return;
-  const flagKey = `${MIGRATION_FLAG_PREFIX}${userId}`;
-  if (localStorage.getItem(flagKey)) return; // already migrated for this user
+/**
+ * Treat any leftover `pockeMigrated:<userId>` flag from the previous
+ * version of this code as proof that migration already happened in
+ * this browser. Without this check, accounts that were already
+ * migrated under the old per-user scheme would be migrated a second
+ * time when the new code first runs.
+ */
+const hasLegacyPerUserFlag = () => {
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(LEGACY_PER_USER_PREFIX)) return true;
+  }
+  return false;
+};
 
-  // Read everything we used to keep in LocalStorage.
-  const safeJSON = (key) => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  };
+/**
+ * Run the migration if (and only if) it hasn't been run in this
+ * browser yet. Safe to call on every login.
+ */
+export const migrateLocalStorageIfNeeded = async () => {
+  if (localStorage.getItem(MIGRATION_FLAG)) return;
+  if (hasLegacyPerUserFlag()) {
+    // Already done under the old scheme — set the new flag so we
+    // never check again, and exit.
+    localStorage.setItem(MIGRATION_FLAG, "legacy");
+    return;
+  }
 
   const onboarding = safeJSON("pockeOnboarding");
   const settings = safeJSON("pockeSettings");
@@ -39,19 +68,18 @@ export const migrateLocalStorageIfNeeded = async (userId) => {
   const hasAnyData =
     onboarding ||
     settings ||
-    (customExpenseCategories?.length) ||
-    (customIncomeCategories?.length) ||
-    (transactions?.length) ||
-    (scheduledPayments?.length) ||
-    (goals?.length);
+    customExpenseCategories?.length ||
+    customIncomeCategories?.length ||
+    transactions?.length ||
+    scheduledPayments?.length ||
+    goals?.length;
 
+  // No legacy data — record an empty migration so we never re-check.
   if (!hasAnyData) {
-    // Nothing to migrate; mark as done so we never check again.
-    localStorage.setItem(flagKey, "empty");
+    localStorage.setItem(MIGRATION_FLAG, "empty");
     return;
   }
 
-  // Build the payload. The backend ignores undefined keys.
   const payload = {
     onboarding: onboarding || undefined,
     settings: settings || undefined,
@@ -64,16 +92,19 @@ export const migrateLocalStorageIfNeeded = async (userId) => {
 
   await api.migrate(payload);
 
-  // Mark migration as done. We deliberately keep the original LocalStorage
-  // entries around as a safety net — they can be cleared later from Settings.
-  localStorage.setItem(flagKey, new Date().toISOString());
+  // Mark migration done. Original LocalStorage entries are kept as a
+  // safety net — they can be cleared from Settings.
+  localStorage.setItem(MIGRATION_FLAG, new Date().toISOString());
 };
 
 /**
- * Clear all legacy LocalStorage entries (call from Settings as cleanup).
+ * Clear all legacy LocalStorage entries (including the per-user
+ * migration flags from older code). Exposed so the user can press a
+ * "Clear local cache" button in Settings once they're sure their
+ * migration succeeded.
  */
 export const purgeLegacyLocalStorage = () => {
-  [
+  const fixedKeys = [
     "pockeOnboarding",
     "pockeSettings",
     "pockeCustomExpenseCategories",
@@ -84,5 +115,14 @@ export const purgeLegacyLocalStorage = () => {
     "pockeAchievements",
     "pockeUser",
     "pockeSession",
-  ].forEach((k) => localStorage.removeItem(k));
+  ];
+  fixedKeys.forEach((k) => localStorage.removeItem(k));
+
+  // Sweep up any old per-user migration flags too.
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(LEGACY_PER_USER_PREFIX)) toRemove.push(k);
+  }
+  toRemove.forEach((k) => localStorage.removeItem(k));
 };

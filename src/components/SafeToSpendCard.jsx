@@ -1,3 +1,14 @@
+/**
+ * SafeToSpendCard — the headline tile on the Dashboard.
+ *
+ * Implements the FYP report's "Safe to Spend Today" formula in two
+ * variants:
+ *   Method 1 (Basic):     income / days_in_month — daily allowance.
+ *   Method 2 (Extended):  factors in already-logged transactions and
+ *                         upcoming subscription debits this month.
+ *
+ * The user can toggle between them on the card itself.
+ */
 import { useState } from "react";
 import { Card, CardContent, CardFooter } from "./Card";
 

@@ -1,3 +1,8 @@
+/**
+ * Sidebar — left-edge navigation rail visible on every authenticated
+ * page. Contains the four primary nav links (dashboard, transactions,
+ * what-if, settings) and a profile link anchored to the bottom.
+ */
 import { NavLink } from "react-router-dom";
 
 import homeIcon from "../assets/icons/material-symbols_home-rounded.svg";

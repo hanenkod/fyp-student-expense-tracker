@@ -1,7 +1,8 @@
-// Prisma schema for POCKE — Student Expense Tracker
-// Generated from the LocalStorage shapes used by the existing frontend.
-// Switch the datasource provider to "postgresql" and re-migrate when ready
-// to deploy to a managed Postgres host (e.g. Railway, Render, Supabase).
+// Prisma schema for POCKE — Student Expense Tracker.
+//
+// Provider is SQLite for development, but the schema is structured so
+// that switching to PostgreSQL only requires changing the provider
+// string below and re-running prisma migrate against the new database.
 
 generator client {
   provider = "prisma-client-js"
@@ -12,6 +13,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User account. Holds credentials, onboarding figures, and JSON blobs
+// for loosely-typed user preferences and custom categories.
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -20,24 +23,27 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Onboarding fields collapsed into the user (1:1 was overkill).
+  // Headline financial figures captured during onboarding.
   income      Float    @default(0)
   expenses    Float    @default(0)
   onboarded   Boolean  @default(false)
 
-  // User preferences stored as a JSON blob string. Schema is loose
-  // (theme, currency, etc.) and parsed on the frontend.
+  // UI preferences (theme, currency, etc.) stored as serialised JSON.
+  // The schema is intentionally loose so the frontend can evolve
+  // without database migrations.
   settingsJson String?
 
-  // Custom categories the user has added.
-  customExpenseCategories String? // JSON array
-  customIncomeCategories  String? // JSON array
+  // Custom categories the user has added on top of the built-in lists,
+  // also stored as JSON arrays.
+  customExpenseCategories String?
+  customIncomeCategories  String?
 
   transactions      Transaction[]
   scheduledPayments ScheduledPayment[]
   goals             SavingsGoal[]
 }
 
+// Single income or expense entry.
 model Transaction {
   id        String   @id @default(cuid())
   userId    String
@@ -49,9 +55,11 @@ model Transaction {
   amount    Float
   date      DateTime
 
-  // For savings-related transactions: marks the source and links the goal.
-  source    String?  // e.g. "savings"
-  goalId    String?  // soft reference; deleting a goal does not cascade
+  // For savings-related transactions: marks the source and links the
+  // originating goal. Soft reference — deleting a goal does not cascade
+  // because the user may want to keep the historical record.
+  source    String?
+  goalId    String?
 
   createdAt DateTime @default(now())
 
@@ -59,6 +67,7 @@ model Transaction {
   @@index([userId, type])
 }
 
+// Recurring subscription such as Netflix, Spotify, or a gym membership.
 model ScheduledPayment {
   id        String   @id @default(cuid())
   userId    String
@@ -74,6 +83,7 @@ model ScheduledPayment {
   @@index([userId])
 }
 
+// Savings target (e.g. "Holiday fund", "New laptop").
 model SavingsGoal {
   id        String   @id @default(cuid())
   userId    String

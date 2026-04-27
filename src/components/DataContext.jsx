@@ -1,3 +1,20 @@
+/**
+ * DataContext — single source of truth for the user's domain data.
+ *
+ * Loads transactions, scheduled payments, and goals from the API once
+ * the user is authenticated, then exposes mutator helpers that write
+ * to the API and update the local cache optimistically.
+ *
+ * Usage:
+ *   const {
+ *     transactions, scheduled, goals, loading, error,
+ *     addTransaction, removeTransaction, addToGoal, ...
+ *   } = useData();
+ *
+ * Why centralise: every page (Dashboard, Transactions, Profile, etc.)
+ * needs the same data. Without this context each page would refetch on
+ * mount, causing duplicate work and inconsistent UI.
+ */
 import {
   createContext,
   useCallback,
@@ -11,16 +28,6 @@ import { useAuth } from "./AuthContext";
 
 const DataContext = createContext(null);
 
-/**
- * One-stop shop for user data fetched from the API.
- *
- * Loads transactions, scheduled payments and goals once on mount (when
- * the user is authenticated), then exposes mutator helpers that hit the
- * API and refresh the local cache.
- *
- * Components that previously read directly from LocalStorage now do:
- *   const { transactions, addTransaction, deleteTransaction } = useData();
- */
 export const DataProvider = ({ children }) => {
   const { user } = useAuth();
 
@@ -30,6 +37,11 @@ export const DataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  /**
+   * Reload all three collections from the server. Called automatically
+   * whenever the authenticated user changes (login, logout, or full
+   * re-fetch via AuthContext.refresh).
+   */
   const refreshAll = useCallback(async () => {
     if (!user) {
       setTransactions([]);
@@ -56,9 +68,12 @@ export const DataProvider = ({ children }) => {
     }
   }, [user]);
 
-  useEffect(() => { refreshAll(); }, [refreshAll]);
+  useEffect(() => {
+    refreshAll();
+  }, [refreshAll]);
 
-  // ── Transaction mutators ───────────────────────────────────────────
+  // Transaction mutators. Each one calls the API, then patches the
+  // local cache so the UI updates without a full refetch.
   const addTransaction = async (data) => {
     const created = await api.createTransaction(data);
     setTransactions((prev) => [created, ...prev]);
@@ -76,7 +91,7 @@ export const DataProvider = ({ children }) => {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // ── Scheduled payment mutators ─────────────────────────────────────
+  // Scheduled payment mutators.
   const addScheduled = async (data) => {
     const created = await api.createScheduled(data);
     setScheduled((prev) => [created, ...prev]);
@@ -88,7 +103,7 @@ export const DataProvider = ({ children }) => {
     setScheduled((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // ── Goal mutators ──────────────────────────────────────────────────
+  // Goal mutators.
   const addGoal = async (data) => {
     const created = await api.createGoal(data);
     setGoals((prev) => [created, ...prev]);
@@ -104,7 +119,8 @@ export const DataProvider = ({ children }) => {
   const removeGoal = async (id) => {
     await api.deleteGoal(id);
     setGoals((prev) => prev.filter((g) => g.id !== id));
-    // The backend may have created a refund tx — pull a fresh list.
+    // Backend may have created a refund tx on delete — reload the
+    // transaction list to surface it.
     refreshAll();
   };
 
@@ -122,15 +138,15 @@ export const DataProvider = ({ children }) => {
     return result;
   };
 
+  // Memoise the value object so consumers don't re-render every time
+  // the provider re-renders for an unrelated reason.
   const value = useMemo(
     () => ({
-      // state
       transactions,
       scheduled,
       goals,
       loading,
       error,
-      // actions
       refreshAll,
       addTransaction,
       updateTransaction,

@@ -1,3 +1,9 @@
+/**
+ * Card primitives — minimal structural wrappers for the design system.
+ *
+ * Card is the outer shell, CardHeader/CardContent/CardFooter are
+ * named slots with consistent padding. Pure presentation, no logic.
+ */
 export const Card = ({ className = "", children }) => {
   return <section className={`card ${className}`.trim()}>{children}</section>;
 };

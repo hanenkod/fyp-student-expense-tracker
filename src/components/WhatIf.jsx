@@ -1,3 +1,16 @@
+/**
+ * WhatIf — interactive scenario planner.
+ *
+ * Lets the user model the impact of four kinds of change on their
+ * budget without actually modifying any data:
+ *   1. Cancel a subscription
+ *   2. Adjust a category budget
+ *   3. Save a fixed amount per month towards a goal
+ *   4. Change overall income
+ *
+ * All calculations happen in-memory; nothing is persisted. Replaced
+ * the older Analytics page (the /analytics route still redirects here).
+ */
 import { useState, useMemo } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSettings } from "./SettingsContext";

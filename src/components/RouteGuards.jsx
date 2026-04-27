@@ -1,8 +1,20 @@
+/**
+ * Route guards for the React Router tree.
+ *
+ * Each guard reads from useAuth() and decides whether to render the
+ * wrapped page or redirect:
+ *
+ *   - AuthOnlyRoute            — only for unauthenticated visitors.
+ *   - ProtectedOnboardingRoute — for users who are logged in but
+ *                                haven't completed onboarding yet.
+ *   - ProtectedDashboardRoute  — for users who are logged in AND
+ *                                have completed onboarding.
+ */
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 /**
- * Full-screen loading spinner shown while the AuthProvider is verifying
+ * Full-screen placeholder shown while the AuthProvider is verifying
  * the JWT against the API on first mount.
  */
 const AuthLoading = () => (
@@ -22,9 +34,9 @@ const AuthLoading = () => (
 );
 
 /**
- * Routes for unauthenticated users only — registration and login.
- * If the visitor IS logged in, send them to /dashboard or /onboarding
- * depending on whether they've finished setup.
+ * For pages that should only show to unauthenticated visitors
+ * (registration, login). Already-authenticated users are routed to
+ * their next logical destination.
  */
 export const AuthOnlyRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -36,9 +48,8 @@ export const AuthOnlyRoute = ({ children }) => {
 };
 
 /**
- * Onboarding-only — the visitor must be logged in but have NOT yet
- * completed onboarding. Already-onboarded users go to dashboard;
- * unauthenticated users go to login.
+ * Authenticated, but not yet onboarded. Already-onboarded users go
+ * straight to the dashboard; unauthenticated users to login.
  */
 export const ProtectedOnboardingRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -54,8 +65,8 @@ export const ProtectedOnboardingRoute = ({ children }) => {
 };
 
 /**
- * Main app routes. The visitor must be logged in AND have completed
- * onboarding. Otherwise redirect to /login or /onboarding accordingly.
+ * Main app routes — must be authenticated AND onboarded. Otherwise
+ * redirect to login or onboarding accordingly.
  */
 export const ProtectedDashboardRoute = ({ children }) => {
   const { user, loading } = useAuth();

@@ -1,3 +1,11 @@
+/**
+ * ProfileAchievements — gamification panel on the profile page.
+ *
+ * Computes eight achievements from the user's transaction history
+ * and headline figures (income, expenses). Pure presentation: the
+ * panel never persists "unlocked" state — it's always derived from
+ * the latest data, so users can't lose progress by clearing storage.
+ */
 import { useMemo } from "react";
 
 const computeAchievements = (transactions, income, expenses) => {
