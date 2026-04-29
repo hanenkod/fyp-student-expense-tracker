@@ -9,6 +9,7 @@ import { useState, useMemo } from "react";
 import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
 import { useData } from "./DataContext";
+import { isInCurrentMonth } from "../utils/date";
 
 const EXPENSE_CATEGORIES = ["Food","Transport","Entertainment","Bills","Shopping","Education","Health","Subscriptions","Other"];
 const INCOME_CATEGORIES = ["Salary","Freelance","Gift","Scholarship","Refund","Investment","Other"];
@@ -54,10 +55,10 @@ export const TransactionList = ({ customExpCat = [], customIncCat = [] }) => {
       const range = DATE_RANGES[dateFilter];
       list = list.filter((t) => {
         const d = new Date(t.date);
-        if (range.daysBack === -1) return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        if (range.daysBack === -1) return isInCurrentMonth(d, now);
         if (range.daysBack === -2) {
           const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          return d.getMonth() === prev.getMonth() && d.getFullYear() === prev.getFullYear();
+          return isInCurrentMonth(d, prev);
         }
         if (range.daysBack === 0) return d.toDateString() === now.toDateString();
         const threshold = new Date();

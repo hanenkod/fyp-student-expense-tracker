@@ -99,34 +99,84 @@
   justify-content: center;
   min-height: 540px;
   padding: 20px 20px 0;
+  overflow: hidden;
 }
 
-.registration__artworkGlow {
+/*
+ * Decorative blur-orbs that fill the space where a 3D illustration
+ * used to live. CSS-only — no images, no fonts, no external assets.
+ * Three coloured circles with heavy gaussian blur create a soft,
+ * atmospheric backdrop that matches the app's purple palette without
+ * pulling visual focus away from the form.
+ */
+.registration__orb {
   position: absolute;
-  width: 480px;
-  height: 480px;
   border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: registrationOrbFloat 18s ease-in-out infinite;
+}
+
+.registration__orb--violet {
+  width: 360px;
+  height: 360px;
+  top: 12%;
+  left: 18%;
   background: radial-gradient(
     circle,
-    rgba(130, 154, 255, 0.16) 0%,
-    rgba(144, 122, 214, 0.12) 28%,
-    rgba(144, 122, 214, 0.04) 52%,
-    rgba(144, 122, 214, 0) 74%
+    rgba(144, 122, 214, 0.85) 0%,
+    rgba(144, 122, 214, 0.3) 60%,
+    rgba(144, 122, 214, 0) 100%
   );
-  filter: blur(20px);
+  animation-delay: 0s;
 }
 
-.registration__image {
-  position: relative;
-  width: 100%;
-  max-width: 520px;
-  max-height: 500px;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto;
-  transform: translateY(-8px);
-  filter: drop-shadow(0 24px 42px rgba(5, 8, 25, 0.22));
-  z-index: 1;
+.registration__orb--blue {
+  width: 300px;
+  height: 300px;
+  bottom: 18%;
+  right: 12%;
+  background: radial-gradient(
+    circle,
+    rgba(130, 154, 255, 0.75) 0%,
+    rgba(130, 154, 255, 0.25) 60%,
+    rgba(130, 154, 255, 0) 100%
+  );
+  animation-delay: -6s;
+}
+
+.registration__orb--pink {
+  width: 240px;
+  height: 240px;
+  top: 48%;
+  left: 8%;
+  background: radial-gradient(
+    circle,
+    rgba(214, 122, 184, 0.55) 0%,
+    rgba(214, 122, 184, 0.18) 60%,
+    rgba(214, 122, 184, 0) 100%
+  );
+  animation-delay: -12s;
+}
+
+@keyframes registrationOrbFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -28px) scale(1.05);
+  }
+  66% {
+    transform: translate(-22px, 18px) scale(0.97);
+  }
+}
+
+/* Respect users who've asked the OS to reduce motion. */
+@media (prefers-reduced-motion: reduce) {
+  .registration__orb {
+    animation: none;
+  }
 }
 
 .registration__brandBlock {
@@ -396,19 +446,27 @@
   }
 
   .registration__artwork {
-    min-height: 340px;
+    min-height: 240px;
     padding: 8px 0 0;
   }
 
-  .registration__artworkGlow {
-    width: 260px;
-    height: 260px;
+  .registration__orb {
+    filter: blur(60px);
   }
 
-  .registration__image {
-    width: 90%;
-    max-height: 320px;
-    transform: none;
+  .registration__orb--violet {
+    width: 240px;
+    height: 240px;
+  }
+
+  .registration__orb--blue {
+    width: 200px;
+    height: 200px;
+  }
+
+  .registration__orb--pink {
+    width: 160px;
+    height: 160px;
   }
 
   .registration__tagline {

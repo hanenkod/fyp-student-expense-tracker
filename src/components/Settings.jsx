@@ -1,10 +1,12 @@
 /**
  * Settings page.
  *
- * Three sections: Appearance (theme), Currency & Format, and Your Data
- * (export and legacy-cache cleanup). Theme and currency are stored
- * locally because they're per-device UI preferences; everything else
- * comes from the API.
+ * Three sections:
+ *   - Appearance (theme) — per-device preference.
+ *   - Currency & Format  — read-only display of the account's locked
+ *     currency. The choice is made during onboarding and cannot be
+ *     changed afterwards because POCKE doesn't perform conversion.
+ *   - Your Data — export and legacy-cache cleanup.
  */
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
@@ -13,6 +15,7 @@ import { useToast } from "./ToastContext";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
 import { purgeLegacyLocalStorage } from "../utils/migration";
+import { safeArray } from "../utils/json";
 import "../styles/style.css";
 import "../styles/settings.css";
 
@@ -51,22 +54,8 @@ const txToCSV = (transactions) => {
   return csv;
 };
 
-/**
- * Decode a JSON-encoded array string from the server. Returns [] for
- * null, undefined, or malformed input — never throws.
- */
-const safeArray = (raw) => {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
 export const Settings = () => {
-  const { settings, updateSetting, currencies } = useSettings();
+  const { settings, updateSetting, currencyInfo } = useSettings();
   const { showToast } = useToast();
   const { user } = useAuth();
   const { transactions, scheduled, goals } = useData();
@@ -76,12 +65,6 @@ export const Settings = () => {
   const handleThemeChange = (theme) => {
     updateSetting("theme", theme);
     showToast(`Switched to ${theme} theme`, { type: "success" });
-  };
-
-  const handleCurrencyChange = (code) => {
-    updateSetting("currency", code);
-    const name = currencies[code]?.label || code;
-    showToast(`Currency changed to ${name}`, { type: "success" });
   };
 
   const handleExportJSON = () => {
@@ -189,45 +172,53 @@ export const Settings = () => {
                 <div className="settings-section__header">
                   <h2 className="settings-section__title">Currency & Format</h2>
                   <p className="settings-section__subtitle">
-                    How amounts are displayed
+                    The currency for this account
                   </p>
                 </div>
 
-                <div className="settings-row">
-                  <div className="settings-row__info">
-                    <span className="settings-row__label">Currency</span>
-                    <span className="settings-row__hint">
-                      Symbol and number formatting
+                <div className="currency-locked">
+                  <div className="currency-locked__display">
+                    <span className="currency-locked__symbol">
+                      {currencyInfo.symbol}
+                    </span>
+                    <div className="currency-locked__info">
+                      <span className="currency-locked__code">
+                        {currencyInfo.code}
+                      </span>
+                      <span className="currency-locked__label">
+                        {currencyInfo.label}
+                      </span>
+                    </div>
+                    <span
+                      className="currency-locked__badge"
+                      aria-label="Locked"
+                      title="Locked"
+                    >
+                      🔒
                     </span>
                   </div>
 
-                  <div className="currency-grid">
-                    {Object.values(currencies).map((c) => (
-                      <button
-                        key={c.code}
-                        type="button"
-                        className={`currency-btn ${settings.currency === c.code ? "currency-btn--active" : ""}`}
-                        onClick={() => handleCurrencyChange(c.code)}
-                      >
-                        <span className="currency-btn__symbol">{c.symbol}</span>
-                        <span className="currency-btn__code">{c.code}</span>
-                        <span className="currency-btn__label">{c.label}</span>
-                      </button>
-                    ))}
+                  <div className="currency-locked__notice">
+                    <strong>Why can&apos;t I change this?</strong>
+                    <p>
+                      POCKE stores every amount in the currency you chose
+                      during onboarding and does not perform conversion.
+                      Changing the symbol later would silently misrepresent
+                      your existing transactions, goals and budgets.
+                      Multi-currency support with live exchange rates is
+                      planned for a future release.
+                    </p>
                   </div>
                 </div>
 
                 <div className="settings-preview">
                   <span className="settings-preview__label">Preview</span>
                   <span className="settings-preview__value">
-                    {currencies[settings.currency].symbol}
-                    {(1234567.89).toLocaleString(
-                      currencies[settings.currency].locale,
-                      {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }
-                    )}
+                    {currencyInfo.symbol}
+                    {(1234567.89).toLocaleString(currencyInfo.locale, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               </section>
@@ -299,8 +290,8 @@ export const Settings = () => {
                       </span>
                       <span className="export-btn__desc">
                         Removes the pre-backend LocalStorage entries kept as
-                        a safety net. Safe to do once you're confident your
-                        data has migrated.
+                        a safety net. Safe to do once you&apos;re confident
+                        your data has migrated.
                       </span>
                     </div>
                   </button>

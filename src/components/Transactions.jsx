@@ -16,24 +16,11 @@ import { SavingsGoals } from "./SavingsGoals";
 import { TransactionList } from "./TransactionList";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
+import { LoadingScreen } from "./LoadingScreen";
 import { api } from "../utils/api";
+import { safeArray } from "../utils/json";
 import "../styles/style.css";
 import "../styles/transactions.css";
-
-/**
- * Decode a JSON-encoded array string from the server, returning [] for
- * null, undefined, or malformed input. Without this guard a corrupt row
- * would crash the entire page.
- */
-const parseCategoryList = (raw) => {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
 
 export const Transactions = () => {
   const { user, setUser } = useAuth();
@@ -45,8 +32,8 @@ export const Transactions = () => {
   const [incCats, setIncCats] = useState([]);
 
   useEffect(() => {
-    setExpCats(parseCategoryList(user?.customExpenseCategories));
-    setIncCats(parseCategoryList(user?.customIncomeCategories));
+    setExpCats(safeArray(user?.customExpenseCategories));
+    setIncCats(safeArray(user?.customIncomeCategories));
   }, [user?.customExpenseCategories, user?.customIncomeCategories]);
 
   /**
@@ -70,26 +57,7 @@ export const Transactions = () => {
   };
 
   if (loading) {
-    return (
-      <div className="dashboard">
-        <div className="app-shell">
-          <div className="layout">
-            <Sidebar />
-            <main
-              className="content"
-              style={{
-                display: "grid",
-                placeItems: "center",
-                minHeight: "60vh",
-                color: "#9391a0",
-              }}
-            >
-              Loading…
-            </main>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

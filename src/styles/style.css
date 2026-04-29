@@ -882,3 +882,40 @@
     grid-template-columns: 1fr;
   }
 }
+/* ============================================================
+ * Loading screen.
+ * Used by <LoadingScreen /> in place of inlined "Loading…"
+ * blocks that used to be copy-pasted in four pages.
+ * ============================================================ */
+.loading-screen {
+  display: grid;
+  place-items: center;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  color: #9391a0;
+}
+
+.loading-screen--page {
+  min-height: 60vh;
+}
+
+.loading-screen--full {
+  min-height: 100vh;
+  background: var(--bg-app, #0e0d1f);
+}
+
+/* ============================================================
+ * Empty-state message in dashboard cards.
+ * Replaces three identical inline-styled <p> blocks.
+ * ============================================================ */
+.empty-message {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-soft);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.empty-message--compact {
+  padding: 12px 0;
+}

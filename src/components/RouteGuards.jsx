@@ -12,26 +12,7 @@
  */
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-
-/**
- * Full-screen placeholder shown while the AuthProvider is verifying
- * the JWT against the API on first mount.
- */
-const AuthLoading = () => (
-  <div
-    style={{
-      minHeight: "100vh",
-      display: "grid",
-      placeItems: "center",
-      background: "var(--bg-app, #0e0d1f)",
-      color: "#9391a0",
-      fontFamily: "Plus Jakarta Sans, system-ui, sans-serif",
-      fontSize: 14,
-    }}
-  >
-    Loading…
-  </div>
-);
+import { LoadingScreen } from "./LoadingScreen";
 
 /**
  * For pages that should only show to unauthenticated visitors
@@ -40,9 +21,11 @@ const AuthLoading = () => (
  */
 export const AuthOnlyRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <AuthLoading />;
+  if (loading) return <LoadingScreen variant="full" />;
   if (user) {
-    return <Navigate to={user.onboarded ? "/dashboard" : "/onboarding"} replace />;
+    return (
+      <Navigate to={user.onboarded ? "/dashboard" : "/onboarding"} replace />
+    );
   }
   return children;
 };
@@ -54,7 +37,7 @@ export const AuthOnlyRoute = ({ children }) => {
 export const ProtectedOnboardingRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (loading) return <AuthLoading />;
+  if (loading) return <LoadingScreen variant="full" />;
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
@@ -71,7 +54,7 @@ export const ProtectedOnboardingRoute = ({ children }) => {
 export const ProtectedDashboardRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (loading) return <AuthLoading />;
+  if (loading) return <LoadingScreen variant="full" />;
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }

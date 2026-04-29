@@ -5,6 +5,11 @@
  * progress, recent transactions list, savings goals snapshot, and a
  * 7-day spending bar chart. All data comes from useData() (transactions,
  * scheduled payments, goals) and useAuth() (income, name).
+ *
+ * Safe-to-spend is computed here using the same Method 2 formula that
+ * SafeToSpendCard documents in its tooltip, so the headline figure
+ * and the breakdown shown when the user clicks "How it's calculated?"
+ * always agree to the penny.
  */
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
@@ -17,6 +22,8 @@ import { TrendArrow } from "./TrendArrow";
 import { useSettings } from "./SettingsContext";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
+import { LoadingScreen } from "./LoadingScreen";
+import { isInCurrentMonth, getDaysLeftInMonth } from "../utils/date";
 
 import "../styles/style.css";
 import "../styles/dashboard.css";
@@ -39,34 +46,16 @@ export const Dashboard = () => {
   const userData = { name: user?.name, email: user?.email };
 
   if (loading) {
-    return (
-      <div className="dashboard">
-        <div className="app-shell">
-          <div className="layout">
-            <Sidebar />
-            <main className="content" style={{ display: "grid", placeItems: "center", minHeight: "60vh", color: "#9391a0" }}>
-              Loading…
-            </main>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const income = Number(onboardingData.income || 0);
 
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  const dayOfMonth = now.getDate();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const remainingDays = daysInMonth - dayOfMonth + 1;
+  const remainingDays = getDaysLeftInMonth(now);
 
   // Real totals from transactions
-  const thisMonthTx = allTransactions.filter((t) => {
-    const d = new Date(t.date);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-  });
+  const thisMonthTx = allTransactions.filter((t) => isInCurrentMonth(t.date, now));
 
   const totalExpenses = thisMonthTx
     .filter((t) => t.type === "expense")
@@ -76,11 +65,27 @@ export const Dashboard = () => {
     .filter((t) => t.type === "income")
     .reduce((s, t) => s + Number(t.amount || 0), 0);
 
+  // Sum of all active subscriptions counted as monthly debits.
+  const upcomingSubscriptions = scheduledPayments.reduce(
+    (s, p) => s + Number(p.amount || 0),
+    0
+  );
+
   // True current balance = monthly income + extra income this month - expenses this month.
   // Can go negative if user overspent.
   const currentBalance = income + totalIncome - totalExpenses;
-  // Remaining budget from the onboarding income only (used for Safe to Spend, capped at 0).
-  const remainingBudget = Math.max(income - totalExpenses, 0);
+
+  // Safe to Spend Today uses the same formula the card itself documents
+  // (Method 2 — Extended), so the headline figure and the breakdown
+  // shown when the user clicks "How it's calculated?" always match.
+  // The fixed-expenses term comes from onboardingData; logged income
+  // increases the pool, logged expenses and upcoming subscriptions
+  // shrink it.
+  const fixedExpenses = Number(onboardingData.expenses || 0);
+  const remainingBudget = Math.max(
+    0,
+    income - fixedExpenses - totalExpenses + totalIncome - upcomingSubscriptions
+  );
   const safeToSpend = remainingDays > 0 ? remainingBudget / remainingDays : 0;
 
   const remainingPercent = income > 0 ? Math.max(0, (currentBalance / income) * 100) : 0;
@@ -133,6 +138,7 @@ export const Dashboard = () => {
     });
 
   const trendDays = [];
+  const dayOfMonth = now.getDate();
   for (let i = Math.max(1, dayOfMonth - 11); i <= dayOfMonth; i++) {
     trendDays.push(i);
   }
@@ -211,10 +217,10 @@ export const Dashboard = () => {
                 title="Safe to Spend Today"
                 amount={formatCurrencyFixed(safeToSpend)}
                 income={income}
-                fixedExpenses={Number(onboardingData.expenses || 0)}
+                fixedExpenses={fixedExpenses}
                 loggedExpenses={totalExpenses}
                 loggedIncome={totalIncome}
-                upcomingSubscriptions={scheduledPayments.reduce((s, p) => s + Number(p.amount || 0), 0)}
+                upcomingSubscriptions={upcomingSubscriptions}
                 daysLeft={remainingDays}
                 currencySymbol={currencyInfo.symbol}
               />
@@ -243,7 +249,7 @@ export const Dashboard = () => {
                 />
                 <CardContent className="card-content--section">
                   {recentTx.length === 0 ? (
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "20px 0" }}>
+                    <p className="empty-message">
                       No transactions yet
                     </p>
                   ) : (
@@ -279,7 +285,7 @@ export const Dashboard = () => {
                 <CardContent className="card-content--sectionless">
                   <div className="subcards">
                     {savingsPanelData.length === 0 ? (
-                      <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "20px 0" }}>
+                      <p className="empty-message">
                         No savings goals yet
                       </p>
                     ) : (
@@ -325,7 +331,7 @@ export const Dashboard = () => {
                   />
                   <CardContent className="card-content--section">
                     {scheduledPayments.length === 0 ? (
-                      <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "12px 0" }}>
+                      <p className="empty-message empty-message--compact">
                         No scheduled payments
                       </p>
                     ) : (

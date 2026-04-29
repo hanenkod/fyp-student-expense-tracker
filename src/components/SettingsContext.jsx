@@ -1,15 +1,23 @@
 /**
- * SettingsContext — per-device UI preferences.
+ * SettingsContext — UI preferences plus the account-locked currency.
  *
- * Stores theme (light/dark) and currency (GBP/USD/EUR) in LocalStorage
- * because they're a property of *this browser*, not the user's account.
- * A user might prefer dark mode on their laptop but light mode on
- * their phone, and that's fine.
+ * Theme is per-device (a user might prefer dark on laptop, light on
+ * phone) and lives in LocalStorage. Currency, on the other hand, is
+ * locked to the account: it's chosen during onboarding and never
+ * changes again, because POCKE doesn't perform conversion and silently
+ * relabelling existing amounts would misrepresent the data.
+ *
+ * The currency is stored in `user.settingsJson` on the server (so it
+ * follows the user across devices) and mirrored to LocalStorage so
+ * the formatter has a value to use before the user record arrives
+ * from the API on first paint.
  *
  * Also exposes a formatMoney helper so every component renders amounts
  * the same way without each maintaining its own Intl options.
  */
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
+import { safeJSON } from "../utils/json";
 
 const SettingsContext = createContext(null);
 
@@ -30,17 +38,30 @@ const DEFAULT_SETTINGS = {
  * is missing or contains malformed JSON.
  */
 const getStoredSettings = () => {
-  try {
-    const raw = localStorage.getItem("pockeSettings");
-    if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
+  const stored = safeJSON(localStorage.getItem("pockeSettings"), null);
+  return stored ? { ...DEFAULT_SETTINGS, ...stored } : DEFAULT_SETTINGS;
 };
 
 export const SettingsProvider = ({ children }) => {
+  const { user } = useAuth();
   const [settings, setSettings] = useState(getStoredSettings);
+
+  // When the user record arrives (or changes), pull their saved
+  // currency out of settingsJson and merge it into local state.
+  // This makes the choice follow the account across devices.
+  useEffect(() => {
+    if (!user?.settingsJson) return;
+    const serverSettings = safeJSON(user.settingsJson, null);
+    if (
+      serverSettings?.currency &&
+      CURRENCIES[serverSettings.currency]
+    ) {
+      setSettings((prev) => ({
+        ...prev,
+        currency: serverSettings.currency,
+      }));
+    }
+  }, [user?.settingsJson]);
 
   // Persist on every change and apply the theme attribute on <html>.
   useEffect(() => {
@@ -48,6 +69,12 @@ export const SettingsProvider = ({ children }) => {
     document.documentElement.setAttribute("data-theme", settings.theme);
   }, [settings]);
 
+  /**
+   * Update a local setting. Note: callers that change `currency`
+   * during onboarding are responsible for also persisting the choice
+   * to user.settingsJson via api.updateMe() — this helper only
+   * touches local state and LocalStorage.
+   */
   const updateSetting = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };

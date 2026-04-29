@@ -13,6 +13,8 @@ import { ProfileBudgetTips } from "./ProfileBudgetTips";
 import { ProfileFinancialSummary } from "./ProfileFinancialSummary";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
+import { LoadingScreen } from "./LoadingScreen";
+import { isInCurrentMonth } from "../utils/date";
 import "../styles/style.css";
 import "../styles/profile.css";
 
@@ -21,26 +23,7 @@ export const Profile = () => {
   const { transactions, loading: dataLoading } = useData();
 
   if (authLoading || dataLoading) {
-    return (
-      <div className="dashboard">
-        <div className="app-shell">
-          <div className="layout">
-            <Sidebar />
-            <main
-              className="content"
-              style={{
-                display: "grid",
-                placeItems: "center",
-                minHeight: "60vh",
-                color: "#9391a0",
-              }}
-            >
-              Loading…
-            </main>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const income = Number(user?.income || 0);
@@ -48,12 +31,7 @@ export const Profile = () => {
   // Current-month aggregates. Computed once here and passed to every
   // child that needs them, so we don't recompute in three places.
   const now = new Date();
-  const thisMonthTx = transactions.filter((t) => {
-    const d = new Date(t.date);
-    return (
-      d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-    );
-  });
+  const thisMonthTx = transactions.filter((t) => isInCurrentMonth(t.date, now));
 
   const monthlySpent = thisMonthTx
     .filter((t) => t.type === "expense")

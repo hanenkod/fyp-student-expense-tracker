@@ -1,15 +1,17 @@
 /**
  * Savings goal routes.
  *
- * Goal mutations that affect a user's balance (add, withdraw, delete-
- * with-refund) run inside a Prisma transaction so the goal state and
- * the bookkeeping transaction are written atomically.
+ * Goal mutations that affect a user's balance (add, withdraw,
+ * delete-with-refund) run inside a Prisma transaction so the goal
+ * state and the bookkeeping transaction are written atomically.
+ * Ownership is enforced via findOwned() in a single query.
  */
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/errors.js";
+import { findOwned } from "../lib/ownership.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -69,8 +71,8 @@ router.patch(
     const id = req.params.id;
     const data = goalSchema.partial().parse(req.body);
 
-    const existing = await prisma.savingsGoal.findUnique({ where: { id } });
-    if (!existing || existing.userId !== req.userId) {
+    const existing = await findOwned(prisma.savingsGoal, id, req.userId);
+    if (!existing) {
       return res.status(404).json({ error: "Goal not found" });
     }
 
@@ -88,8 +90,8 @@ router.delete(
   "/:id",
   asyncHandler(async (req, res) => {
     const id = req.params.id;
-    const existing = await prisma.savingsGoal.findUnique({ where: { id } });
-    if (!existing || existing.userId !== req.userId) {
+    const existing = await findOwned(prisma.savingsGoal, id, req.userId);
+    if (!existing) {
       return res.status(404).json({ error: "Goal not found" });
     }
 
@@ -128,8 +130,8 @@ router.post(
   asyncHandler(async (req, res) => {
     const id = req.params.id;
     const { amount } = moveSchema.parse(req.body);
-    const goal = await prisma.savingsGoal.findUnique({ where: { id } });
-    if (!goal || goal.userId !== req.userId) {
+    const goal = await findOwned(prisma.savingsGoal, id, req.userId);
+    if (!goal) {
       return res.status(404).json({ error: "Goal not found" });
     }
 
@@ -174,8 +176,8 @@ router.post(
   asyncHandler(async (req, res) => {
     const id = req.params.id;
     const { amount } = moveSchema.parse(req.body);
-    const goal = await prisma.savingsGoal.findUnique({ where: { id } });
-    if (!goal || goal.userId !== req.userId) {
+    const goal = await findOwned(prisma.savingsGoal, id, req.userId);
+    if (!goal) {
       return res.status(404).json({ error: "Goal not found" });
     }
     if (goal.saved <= 0) {

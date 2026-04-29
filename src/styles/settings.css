@@ -1174,3 +1174,110 @@
 :root[data-theme="dark"] .tx-amount-symbol {
   color: var(--text-soft);
 }
+/* ============================================================
+ * Settings — locked currency display.
+ *
+ * Replaces the old .currency-grid / .currency-btn interactive
+ * picker. Shows the account's chosen currency as a flat
+ * read-only card with a lock badge plus a "why?" notice block.
+ * The old .currency-* rules above are kept for now but are no
+ * longer referenced from any component.
+ * ============================================================ */
+
+.currency-locked {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.currency-locked__display {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background-color: #f5f1ff;
+  border: 1px solid #d6cdee;
+}
+
+.currency-locked__symbol {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  line-height: 1;
+}
+
+.currency-locked__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.currency-locked__code {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  display: block;
+}
+
+.currency-locked__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6e6a7a;
+  display: block;
+}
+
+.currency-locked__badge {
+  font-size: 18px;
+  opacity: 0.7;
+  cursor: default;
+  user-select: none;
+}
+
+.currency-locked__notice {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background-color: #fbfaff;
+  border: 1px dashed #d6cdee;
+  font-family: "Inter", sans-serif;
+}
+
+.currency-locked__notice strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.currency-locked__notice p {
+  margin: 0;
+  color: #6e6a7a;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+:root[data-theme="dark"] .currency-locked__display {
+  background-color: rgba(144, 122, 214, 0.12);
+  border-color: rgba(144, 122, 214, 0.3);
+}
+
+:root[data-theme="dark"] .currency-locked__symbol,
+:root[data-theme="dark"] .currency-locked__code,
+:root[data-theme="dark"] .currency-locked__notice strong {
+  color: #f1edff;
+}
+
+:root[data-theme="dark"] .currency-locked__label,
+:root[data-theme="dark"] .currency-locked__notice p {
+  color: #aaa3c0;
+}
+
+:root[data-theme="dark"] .currency-locked__notice {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(144, 122, 214, 0.25);
+}

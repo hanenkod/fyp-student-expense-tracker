@@ -10,6 +10,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/errors.js";
+import { findOwned } from "../lib/ownership.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -64,8 +65,8 @@ router.delete(
   "/:id",
   asyncHandler(async (req, res) => {
     const id = req.params.id;
-    const existing = await prisma.scheduledPayment.findUnique({ where: { id } });
-    if (!existing || existing.userId !== req.userId) {
+    const existing = await findOwned(prisma.scheduledPayment, id, req.userId);
+    if (!existing) {
       return res.status(404).json({ error: "Scheduled payment not found" });
     }
     await prisma.scheduledPayment.delete({ where: { id } });

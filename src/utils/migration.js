@@ -20,7 +20,15 @@ const LEGACY_PER_USER_PREFIX = "pockeMigrated:";
  * Read a JSON value from LocalStorage, returning null if the key is
  * missing or the contents are corrupt.
  */
-const safeJSON = (key) => {
+/**
+ * Read and parse a JSON value from LocalStorage by key. Returns null
+ * if the key is missing or the contents fail to parse.
+ *
+ * Note: this is intentionally separate from `safeJSON` in utils/json
+ * (which takes a raw string). Keeping it here as a key-aware helper
+ * means the migration code reads more like a series of named lookups.
+ */
+const loadJSON = (key) => {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
@@ -57,13 +65,13 @@ export const migrateLocalStorageIfNeeded = async () => {
     return;
   }
 
-  const onboarding = safeJSON("pockeOnboarding");
-  const settings = safeJSON("pockeSettings");
-  const customExpenseCategories = safeJSON("pockeCustomExpenseCategories");
-  const customIncomeCategories = safeJSON("pockeCustomIncomeCategories");
-  const transactions = safeJSON("pockeTransactions");
-  const scheduledPayments = safeJSON("pockeScheduledPayments");
-  const goals = safeJSON("pockeGoals");
+  const onboarding = loadJSON("pockeOnboarding");
+  const settings = loadJSON("pockeSettings");
+  const customExpenseCategories = loadJSON("pockeCustomExpenseCategories");
+  const customIncomeCategories = loadJSON("pockeCustomIncomeCategories");
+  const transactions = loadJSON("pockeTransactions");
+  const scheduledPayments = loadJSON("pockeScheduledPayments");
+  const goals = loadJSON("pockeGoals");
 
   const hasAnyData =
     onboarding ||

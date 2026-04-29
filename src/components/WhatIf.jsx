@@ -17,6 +17,8 @@ import { useSettings } from "./SettingsContext";
 import { useToast } from "./ToastContext";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
+import { LoadingScreen } from "./LoadingScreen";
+import { isInCurrentMonth, getDaysInMonth, getDaysLeftInMonth } from "../utils/date";
 import "../styles/style.css";
 import "../styles/whatif.css";
 
@@ -29,13 +31,6 @@ const SCENARIO_TYPES = [
 
 const FREQUENCY_PER_MONTH = { daily: 30, weekly: 4, monthly: 1 };
 
-const getDaysInMonth = () => {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-};
-
-const getDayOfMonth = () => new Date().getDate();
-
 export const WhatIf = () => {
   const { formatMoney, currencyInfo } = useSettings();
   const { showToast } = useToast();
@@ -46,18 +41,7 @@ export const WhatIf = () => {
   const onboardingData = { income: user?.income || 0, expenses: user?.expenses || 0 };
 
   if (loading) {
-    return (
-      <div className="dashboard">
-        <div className="app-shell">
-          <div className="layout">
-            <Sidebar />
-            <main className="content" style={{ display: "grid", placeItems: "center", minHeight: "60vh", color: "#9391a0" }}>
-              Loading…
-            </main>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const baseIncome = Number(onboardingData.income || 0);
@@ -66,13 +50,8 @@ export const WhatIf = () => {
   const [draft, setDraft] = useState({ type: "purchase", label: "", amount: "", frequency: "weekly", targetSubId: "" });
 
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
 
-  const thisMonthTx = allTransactions.filter((t) => {
-    const d = new Date(t.date);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-  });
+  const thisMonthTx = allTransactions.filter((t) => isInCurrentMonth(t.date, now));
 
   const spentSoFar = thisMonthTx
     .filter((t) => t.type === "expense")
@@ -82,9 +61,8 @@ export const WhatIf = () => {
     .filter((t) => t.type === "income")
     .reduce((s, t) => s + Number(t.amount || 0), 0);
 
-  const daysInMonth = getDaysInMonth();
-  const dayOfMonth = getDayOfMonth();
-  const daysLeft = Math.max(1, daysInMonth - dayOfMonth + 1);
+  const daysInMonth = getDaysInMonth(now);
+  const daysLeft = Math.max(1, getDaysLeftInMonth(now));
 
   // Historical average daily spend from last 30 days (rolling)
   const thirtyDaysAgo = new Date();

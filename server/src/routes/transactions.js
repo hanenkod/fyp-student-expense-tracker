@@ -2,14 +2,15 @@
  * Transaction CRUD routes.
  *
  * Every endpoint requires authentication and only operates on rows
- * owned by the calling user — even on PATCH/DELETE we double-check
- * the row's userId before mutating it.
+ * owned by the calling user. Ownership is enforced via findOwned()
+ * which uses an atomic findFirst() — no two-step race window.
  */
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/errors.js";
+import { findOwned } from "../lib/ownership.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -73,8 +74,8 @@ router.patch(
     const id = req.params.id;
     const data = txSchema.partial().parse(req.body);
 
-    const existing = await prisma.transaction.findUnique({ where: { id } });
-    if (!existing || existing.userId !== req.userId) {
+    const existing = await findOwned(prisma.transaction, id, req.userId);
+    if (!existing) {
       return res.status(404).json({ error: "Transaction not found" });
     }
 
@@ -97,8 +98,8 @@ router.delete(
   "/:id",
   asyncHandler(async (req, res) => {
     const id = req.params.id;
-    const existing = await prisma.transaction.findUnique({ where: { id } });
-    if (!existing || existing.userId !== req.userId) {
+    const existing = await findOwned(prisma.transaction, id, req.userId);
+    if (!existing) {
       return res.status(404).json({ error: "Transaction not found" });
     }
     await prisma.transaction.delete({ where: { id } });

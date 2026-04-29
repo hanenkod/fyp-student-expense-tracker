@@ -12,7 +12,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { BiApple } from "./BiApple";
 import { DeviconGoogle } from "./DeviconGoogle";
-import removebg1 from "./removebg-1.png";
 import "../styles/auth.css";
 
 const initialForm = { name: "", email: "", password: "" };
@@ -79,13 +78,10 @@ export const Registration = () => {
       <div className="registration__shell app-shell">
         <aside className="registration__sidebar">
           <div className="registration__sidebarContent">
-            <div className="registration__artwork">
-              <div className="registration__artworkGlow" />
-              <img
-                className="registration__image"
-                src={removebg1}
-                alt="POCKE abstract illustration"
-              />
+            <div className="registration__artwork" aria-hidden="true">
+              <span className="registration__orb registration__orb--violet" />
+              <span className="registration__orb registration__orb--blue" />
+              <span className="registration__orb registration__orb--pink" />
             </div>
 
             <div className="registration__brandBlock">

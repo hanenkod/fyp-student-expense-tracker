@@ -127,3 +127,141 @@
     padding: 32px 0 24px;
   }
 }
+
+/* ============================================================
+ * Onboarding Step 1 — currency picker.
+ *
+ * Used only by the Onboarding component for the new currency-
+ * selection step. Visually consistent with .onboardingModule
+ * above. Three large tappable cards (one per supported currency)
+ * instead of the standard single-input layout.
+ * ============================================================ */
+
+.onboardingStep {
+  width: 100%;
+  max-width: 328px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  animation: onboardingFadeSlide 0.28s ease;
+}
+
+.onboardingStep__head {
+  text-align: center;
+}
+
+.onboardingStep__counter {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #f1edff;
+  color: #907ad6;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.onboardingStep__title {
+  margin: 0;
+  color: #111111;
+  font-family: "Inter", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.onboardingStep__description {
+  margin: 14px 0 0;
+  color: #918d8d;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.onboardingStep__currencyGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.onboardingStep__currencyBtn {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #d6d3e0;
+  border-radius: 14px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease,
+    transform 0.1s ease, box-shadow 0.2s ease;
+  font-family: "Inter", sans-serif;
+  text-align: left;
+}
+
+.onboardingStep__currencyBtn:hover {
+  border-color: #b8acdf;
+  background-color: #faf8ff;
+}
+
+.onboardingStep__currencyBtn:active {
+  transform: scale(0.99);
+}
+
+.onboardingStep__currencyBtn--active {
+  border-color: #907ad6;
+  background-color: #f5f1ff;
+  box-shadow: 0 0 0 3px rgba(144, 122, 214, 0.15);
+}
+
+.onboardingStep__currencySymbol {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111111;
+  text-align: center;
+}
+
+.onboardingStep__currencyCode {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111111;
+  display: block;
+}
+
+.onboardingStep__currencyLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6e6a7a;
+  display: block;
+  margin-top: 2px;
+}
+
+.onboardingStep__next {
+  width: 100%;
+  height: 45px;
+  margin-top: 24px;
+  border: none;
+  border-radius: 12px;
+  background-color: #907ad6;
+  color: #ffffff;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease,
+    transform 0.1s ease;
+}
+
+.onboardingStep__next:hover {
+  background-color: #7d68c0;
+}
+
+.onboardingStep__next:active {
+  transform: scale(0.99);
+}
