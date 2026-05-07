@@ -23,7 +23,13 @@
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: var(--space-20);
+  /* Stretch both cards to the same height. The trends card grows to
+     fit chart + xlabels + stats; the Monthly Plan card matches it. */
+  align-items: stretch;
 }
+
+/* Restore Monthly Plan to its standard .card--lg height — no longer
+   needs to match an over-extended trends card. */
 
 .right-col {
   display: grid;
@@ -38,44 +44,132 @@
   gap: var(--space-20);
 }
 
-/* ── Chart ── */
+/* ── Chart ──
+ *
+ * The trends card needs more vertical room than the standard
+ * .card--lg (202px) so the 7-day chart, x-axis date labels, and the
+ * three side-stats can all fit without clipping. We override the
+ * fixed height with auto + a generous min-height. Override the
+ * .card-content--chart flex defaults from style.css too — we want a
+ * 2-column grid (chart | stats), not a single flex strip.
+ */
 .card.trends {
   overflow: hidden;
   min-width: 0;
+  /* Don't extend the card height — fits within standard card--lg.
+     Layout below ensures chart + 4 stats fit in the available area. */
+}
+
+.card-content--chart {
+  display: grid;
+  /*
+   * Stats column widened from 160px to 200px so labels like
+   * "DAILY AVERAGE" fit on one line (the previous 160px caused
+   * "DAILY" / "AVERAGE" to wrap onto two lines, misaligning the
+   * value rows in the right column).
+   *
+   * Gap between chart and stats reduced from 24px to 12px to bring
+   * the two visually together — usability testing flagged the wide
+   * gap as making the side stats feel disconnected from the chart.
+   */
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 12px;
+  /*
+   * Pin contents to the top-left of the content area. The base
+   * .card-content--chart rule in style.css uses display:flex with
+   * align-items:flex-end, which (combined with .card-content's
+   * flex:1 making this container stretch vertically) pushed the
+   * chart-layout to the centre/bottom of the card and left a gap
+   * between the header subtitle and the y-axis labels. We reset:
+   *
+   *   - align-items / align-content / justify-content all to start,
+   *     so the grid cell stays anchored to the top edge.
+   *   - flex: 0 0 auto so the container doesn't keep stretching
+   *     vertically once its single 122px row is laid out — leftover
+   *     space goes below the chart, not around it.
+   *   - margin-top: 0 to override .card-content--section if applied.
+   */
+  align-items: start;
+  align-content: start;
+  justify-items: start;
+  flex: 0 0 auto;
+  margin-top: 0;
 }
 
 .chart-layout {
   display: grid;
-  grid-template-columns: 37px minmax(0, 1fr);
-  align-items: end;
-  column-gap: 15px;
+  /*
+   * y-labels column wide enough to fit values with two decimals
+   * like "£325.00" (~7 chars). The previous 37px clipped the
+   * decimal portion and forced the bars rightward.
+   */
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: start;
+  /*
+   * No column-gap — y-labels already include their own padding to
+   * keep them flush against the card's left edge while still
+   * sitting visually next to the bars.
+   */
+  column-gap: 8px;
   width: 100%;
-  height: var(--chart-height);
+  /* Compact total to fit within the .card--lg envelope: ~100px bars
+     area + 22px xlabels strip below. */
+  height: 122px;
   box-sizing: border-box;
 }
 
 .chart-ylabels {
-  height: 100%;
+  /* Match only the bars area (100px), not the xlabels strip below,
+     so y-labels align with the actual bar baselines. */
+  height: 100px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 8px;
   font-family: "Inter-Black", Helvetica;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   line-height: 1;
   color: var(--text-main);
 }
 
+.chart-bars-wrap {
+  /* Same height as chart-layout so the column structure stays
+     consistent. */
+  height: 122px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .chart-bars {
-  height: 100%;
+  height: 100px;
   display: flex;
   align-items: flex-end;
+  justify-content: flex-start;
   gap: 18px;
-  padding-right: 15px;
+  padding: 0 6px;
   box-sizing: border-box;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible; /* let tooltips bleed outside */
+}
+
+.chart-xlabels {
+  display: flex;
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 6px 6px 0;
+  box-sizing: border-box;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.chart-xlabel {
+  width: 36px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .bar {
@@ -88,6 +182,87 @@
 .bar--accent { background: var(--color-accent); }
 .bar--indigo { background: var(--color-indigo); }
 .bar--deep { background: var(--color-deep); }
+
+/* ── Chart side-stats ──
+ *
+ * Four figures next to the chart in a 2x2 grid: total spent,
+ * daily average, highest single day, and active days. Compact
+ * enough to fit alongside the chart inside a standard card--lg.
+ */
+.chart-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /*
+   * Two rows of equal height, stretched to fill the chart-layout's
+   * 122px so Total Spent / Daily Average sit on the same baseline
+   * as Highest Day / Active Days. align-self stretches this stats
+   * block to match the chart's height; align-content:stretch then
+   * splits that height between the two rows.
+   */
+  grid-template-rows: 1fr 1fr;
+  gap: 8px 16px;
+  align-content: stretch;
+  align-self: stretch;
+  /*
+   * Same 122px envelope as chart-layout so the right column is
+   * the same height as the left column even when card-content is
+   * taller than needed.
+   */
+  height: 122px;
+  padding: 0;
+  min-width: 0;
+}
+
+.chart-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Anchor to the top of the grid cell so all four labels start on
+     the same horizontal lines. */
+  align-self: start;
+  min-width: 0;
+}
+
+.chart-stat__label {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.chart-stat__value {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-stat__sub {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+  /* On narrow screens stats wrap below the chart, still as 2x2. */
+  .card-content--chart {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chart-stats {
+    padding: 12px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
 
 /* ── Pace / monthly plan ── */
 .pace-pill {
@@ -204,4 +379,60 @@
   .right-metrics {
     grid-template-columns: 1fr;
   }
+}
+/* ── Bar tooltips ──
+ *
+ * Hovering a bar reveals the exact amount and date. Tooltip is
+ * rendered as a sibling element via the chart-bar wrapper (see
+ * BarChartMock) and absolutely positioned above its parent.
+ */
+.chart-bar-cell {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.chart-bar-cell__tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #1d1b34;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 5;
+}
+
+.chart-bar-cell__tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1d1b34;
+}
+
+.chart-bar-cell:hover .chart-bar-cell__tooltip,
+.chart-bar-cell:focus-visible .chart-bar-cell__tooltip {
+  opacity: 1;
+}
+
+.chart-bar-cell__date {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-soft);
+  margin-top: 2px;
 }

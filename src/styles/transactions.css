@@ -638,3 +638,117 @@
 .tx-filter-clear:hover {
   background: rgba(144, 122, 214, 0.08);
 }
+/* ============================================================
+ * Top Spending Categories card.
+ *
+ * Lives at the top of the .tx-left column, above the
+ * AddTransactionForm. Compact 3-row list ranking the user's
+ * biggest expense categories this month with a thin progress
+ * bar showing each category's share of total monthly spending.
+ * ============================================================ */
+.top-categories {
+  min-width: 0;
+  margin-bottom: var(--space-20, 20px);
+}
+
+.card-content--top-categories {
+  padding-top: 4px;
+}
+
+.top-categories__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.top-categories__row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.top-categories__rank {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #907ad6;
+}
+
+.top-categories__rank--1 { background-color: #907ad6; }
+.top-categories__rank--2 { background-color: #829aff; }
+.top-categories__rank--3 { background-color: #d67ab8; }
+
+.top-categories__body {
+  min-width: 0;
+}
+
+.top-categories__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.top-categories__name {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-categories__amount {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  flex-shrink: 0;
+}
+
+.top-categories__bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background-color: rgba(144, 122, 214, 0.12);
+  overflow: hidden;
+}
+
+.top-categories__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #907ad6 0%, #829aff 100%);
+  transition: width 0.4s ease;
+}
+
+.top-categories__share {
+  display: block;
+  margin-top: 5px;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+/* Empty state inside the Top Categories card — shown when the user
+   hasn't logged any expenses for the current month. */
+.top-categories .empty-message {
+  margin: 0;
+  padding: 20px 0;
+  text-align: center;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--text-soft);
+}

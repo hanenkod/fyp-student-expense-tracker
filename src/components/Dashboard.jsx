@@ -22,8 +22,6 @@ import { TrendArrow } from "./TrendArrow";
 import { useSettings } from "./SettingsContext";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
-import { LoadingScreen } from "./LoadingScreen";
-import { isInCurrentMonth, getDaysLeftInMonth } from "../utils/date";
 
 import "../styles/style.css";
 import "../styles/dashboard.css";
@@ -46,16 +44,34 @@ export const Dashboard = () => {
   const userData = { name: user?.name, email: user?.email };
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <div className="dashboard">
+        <div className="app-shell">
+          <div className="layout">
+            <Sidebar />
+            <main className="content" style={{ display: "grid", placeItems: "center", minHeight: "60vh", color: "#9391a0" }}>
+              Loading…
+            </main>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const income = Number(onboardingData.income || 0);
 
   const now = new Date();
-  const remainingDays = getDaysLeftInMonth(now);
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const remainingDays = daysInMonth - dayOfMonth + 1;
 
   // Real totals from transactions
-  const thisMonthTx = allTransactions.filter((t) => isInCurrentMonth(t.date, now));
+  const thisMonthTx = allTransactions.filter((t) => {
+    const d = new Date(t.date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
 
   const totalExpenses = thisMonthTx
     .filter((t) => t.type === "expense")
@@ -87,6 +103,14 @@ export const Dashboard = () => {
     income - fixedExpenses - totalExpenses + totalIncome - upcomingSubscriptions
   );
   const safeToSpend = remainingDays > 0 ? remainingBudget / remainingDays : 0;
+
+  // True once the user has logged anything at all. Drives whether
+  // the Welcome block (no data) or the lower grid sections (data
+  // present) show below the headline strip.
+  const hasAnyData =
+    allTransactions.length > 0 ||
+    scheduledPayments.length > 0 ||
+    savingsGoals.length > 0;
 
   const remainingPercent = income > 0 ? Math.max(0, (currentBalance / income) * 100) : 0;
   const displayIncome = totalIncome > 0 ? totalIncome : income;
@@ -128,7 +152,11 @@ export const Dashboard = () => {
     progressValue: g.target > 0 ? Math.round((g.saved / g.target) * 100) : 0,
   }));
 
-  // Daily spending chart (last 12 days, left=oldest → right=newest)
+  // Daily spending chart — last 7 days, oldest on the left, today on
+  // the right. Each bar carries a date label so the chart has an
+  // explicit time axis. Used to be a 12-day rolling window without
+  // labels, which made it hard to read; usability testing flagged
+  // both issues.
   const dailySpending = {};
   thisMonthTx
     .filter((t) => t.type === "expense")
@@ -137,19 +165,76 @@ export const Dashboard = () => {
       dailySpending[day] = (dailySpending[day] || 0) + Number(t.amount || 0);
     });
 
-  const trendDays = [];
-  const dayOfMonth = now.getDate();
-  for (let i = Math.max(1, dayOfMonth - 11); i <= dayOfMonth; i++) {
-    trendDays.push(i);
+  const TREND_WINDOW = 7;
+  const trendDates = [];
+  for (let offset = TREND_WINDOW - 1; offset >= 0; offset--) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    trendDates.push(d);
   }
 
-  const maxSpend = Math.max(...trendDays.map((d) => dailySpending[d] || 0), 1);
-  const trendBars = trendDays.map((d, idx) => ({
-    height: Math.max(((dailySpending[d] || 0) / maxSpend) * 130, 4),
-    className: barColors[idx % barColors.length],
-  }));
+  const trendValues = trendDates.map((d) => dailySpending[d.getDate()] || 0);
+  // Bar heights scale against the max spend in the window. We keep
+  // an unrounded numeric maxSpend for the height calculation, then
+  // expose the same number to the y-axis labels so the top label
+  // reads the actual peak rather than a rounded-up value.
+  const maxSpend = Math.max(...trendValues, 1);
 
-  const maxLabel = Math.ceil(maxSpend / 10) * 10 || 10;
+  const trendBars = trendDates.map((d, idx) => {
+    const value = trendValues[idx];
+    // Compose tooltip strings here so the chart component stays
+    // formatting-agnostic. Empty days show "No spending" instead of
+    // "£0.00" — the latter looks like a logged zero-pound transaction.
+    const dateLabel = d.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+    const tooltip = {
+      amount: value > 0 ? formatCurrencyFixed(value) : "No spending",
+      date: dateLabel,
+      aria:
+        value > 0
+          ? `${formatCurrencyFixed(value)} spent on ${dateLabel}`
+          : `No spending on ${dateLabel}`,
+    };
+    return {
+      // Bars with a value get proportional height (max ~95px so they
+      // fit inside the 100px bars area); empty bars get a thin
+      // baseline tick so the axis still reads as continuous.
+      height: value > 0 ? Math.max((value / maxSpend) * 95, 6) : 3,
+      className: barColors[idx % barColors.length],
+      label: d.getDate(),
+      tooltip,
+    };
+  });
+
+  // Aggregates over the same 7-day window — shown alongside the chart
+  // so users see both the shape (bars) and the headline numbers
+  // (total, average, peak day) without doing the maths in their head.
+  const trendTotal = trendValues.reduce((s, v) => s + v, 0);
+  const trendAverage = trendTotal / TREND_WINDOW;
+  const trendPeakIndex = trendValues.reduce(
+    (best, v, i) => (v > trendValues[best] ? i : best),
+    0
+  );
+  const trendPeakValue = trendValues[trendPeakIndex] || 0;
+  const trendPeakDate = trendDates[trendPeakIndex];
+
+  // Format the peak day as e.g. "Mon 6". When there's no spending in
+  // the window at all we render a dash instead of a misleading date.
+  const trendPeakLabel =
+    trendPeakValue > 0
+      ? trendPeakDate.toLocaleDateString("en-GB", {
+          weekday: "short",
+          day: "numeric",
+        })
+      : "—";
+
+  // Active days — how many of the 7 days had any spending at all. A
+  // proxy for engagement / habit-streak that doesn't require us to
+  // judge whether a given amount counts as "good" or "bad".
+  const trendActiveDays = trendValues.filter((v) => v > 0).length;
 
   return (
     <div className="dashboard">
@@ -170,13 +255,51 @@ export const Dashboard = () => {
               </div>
             </header>
 
-            {allTransactions.length === 0 && scheduledPayments.length === 0 && savingsGoals.length === 0 ? (
+            {/*
+             * The headline strip (Safe to Spend, Current Balance,
+             * Total Income/Expense, Scheduled Payments) is always
+             * rendered, even on a brand-new account. Usability
+             * testing showed users decode the Safe-to-Spend value in
+             * seconds; surfacing it on the very first visit means we
+             * don't hide the app's most distinctive feature behind
+             * an onboarding screen. When there's no data yet, the
+             * Welcome block appears below this strip with hints and
+             * shortcuts.
+             */}
+            <section className="grid-top">
+              <SafeToSpendCard
+                title="Safe to Spend Today"
+                amount={formatCurrencyFixed(safeToSpend)}
+                income={income}
+                fixedExpenses={fixedExpenses}
+                loggedExpenses={totalExpenses}
+                loggedIncome={totalIncome}
+                upcomingSubscriptions={upcomingSubscriptions}
+                daysLeft={remainingDays}
+                currencySymbol={currencyInfo.symbol}
+              />
+              <MetricCard
+                className="card--sm metric-accent"
+                title="Current Balance"
+                value={formatCurrency(currentBalance)}
+                footer={
+                  <div className={`chip ${balancePositive ? "chip-positive" : "chip-negative"}`}>
+                    <span>{formatPercent(remainingPercent)} left</span>
+                    <TrendArrow direction={balancePositive ? "up" : "down"} />
+                  </div>
+                }
+              />
+            </section>
+
+            {!hasAnyData && (
               <section className="dashboard-empty">
                 <div className="dashboard-empty__illus" aria-hidden="true">💸</div>
                 <h2 className="dashboard-empty__title">Welcome to POCKE, {userData.name || "there"}!</h2>
                 <p className="dashboard-empty__text">
-                  You're all set up. Start tracking your money by adding your first transaction —
-                  everything on this dashboard will come to life as you go.
+                  Your Safe-to-Spend above is the figure to watch — it
+                  updates the moment you start logging real spending.
+                  Add your first transaction to see the rest of the
+                  dashboard come to life.
                 </p>
                 <div className="dashboard-empty__actions">
                   <button
@@ -210,33 +333,10 @@ export const Dashboard = () => {
                   </div>
                 </div>
               </section>
-            ) : (
-            <>
-            <section className="grid-top">
-              <SafeToSpendCard
-                title="Safe to Spend Today"
-                amount={formatCurrencyFixed(safeToSpend)}
-                income={income}
-                fixedExpenses={fixedExpenses}
-                loggedExpenses={totalExpenses}
-                loggedIncome={totalIncome}
-                upcomingSubscriptions={upcomingSubscriptions}
-                daysLeft={remainingDays}
-                currencySymbol={currencyInfo.symbol}
-              />
-              <MetricCard
-                className="card--sm metric-accent"
-                title="Current Balance"
-                value={formatCurrency(currentBalance)}
-                footer={
-                  <div className={`chip ${balancePositive ? "chip-positive" : "chip-negative"}`}>
-                    <span>{formatPercent(remainingPercent)} left</span>
-                    <TrendArrow direction={balancePositive ? "up" : "down"} />
-                  </div>
-                }
-              />
-            </section>
+            )}
 
+            {hasAnyData && (
+              <>
             <section className="grid-middle">
               <Card className="transactions card--xl card-soft">
                 <CardHeader
@@ -249,7 +349,7 @@ export const Dashboard = () => {
                 />
                 <CardContent className="card-content--section">
                   {recentTx.length === 0 ? (
-                    <p className="empty-message">
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "20px 0" }}>
                       No transactions yet
                     </p>
                   ) : (
@@ -285,7 +385,7 @@ export const Dashboard = () => {
                 <CardContent className="card-content--sectionless">
                   <div className="subcards">
                     {savingsPanelData.length === 0 ? (
-                      <p className="empty-message">
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "20px 0" }}>
                         No savings goals yet
                       </p>
                     ) : (
@@ -331,7 +431,7 @@ export const Dashboard = () => {
                   />
                   <CardContent className="card-content--section">
                     {scheduledPayments.length === 0 ? (
-                      <p className="empty-message empty-message--compact">
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--text-soft)", textAlign: "center", padding: "12px 0" }}>
                         No scheduled payments
                       </p>
                     ) : (
@@ -356,17 +456,58 @@ export const Dashboard = () => {
                 <CardHeader
                   className="card-header--stack"
                   title="Spending Trends"
-                  subtitle="Daily spending this month"
+                  subtitle="Daily spending — last 7 days"
                 />
                 <CardContent className="card-content--chart">
                   <div className="chart-layout">
                     <div className="chart-ylabels">
-                      <span>{currencyInfo.symbol}{maxLabel}</span>
-                      <span>{currencyInfo.symbol}{Math.round(maxLabel * 0.66)}</span>
-                      <span>{currencyInfo.symbol}{Math.round(maxLabel * 0.33)}</span>
-                      <span>{currencyInfo.symbol}0</span>
+                      {/*
+                       * Y-axis ticks at exact values rather than rounded
+                       * intervals so the top label always matches the
+                       * tallest bar. Previously we rounded up to the
+                       * nearest 10 which made e.g. £325 spending show
+                       * "£330" at the top — confusingly above the bar.
+                       */}
+                      <span>{formatCurrencyFixed(maxSpend)}</span>
+                      <span>{formatCurrencyFixed(maxSpend * 0.66)}</span>
+                      <span>{formatCurrencyFixed(maxSpend * 0.33)}</span>
+                      <span>{formatCurrencyFixed(0)}</span>
                     </div>
                     <BarChartMock bars={trendBars} />
+                  </div>
+
+                  <div className="chart-stats">
+                    <div className="chart-stat">
+                      <span className="chart-stat__label">Total spent</span>
+                      <span className="chart-stat__value">
+                        {formatCurrencyFixed(trendTotal)}
+                      </span>
+                      <span className="chart-stat__sub">over 7 days</span>
+                    </div>
+
+                    <div className="chart-stat">
+                      <span className="chart-stat__label">Daily average</span>
+                      <span className="chart-stat__value">
+                        {formatCurrencyFixed(trendAverage)}
+                      </span>
+                      <span className="chart-stat__sub">per day</span>
+                    </div>
+
+                    <div className="chart-stat">
+                      <span className="chart-stat__label">Highest day</span>
+                      <span className="chart-stat__value">
+                        {formatCurrencyFixed(trendPeakValue)}
+                      </span>
+                      <span className="chart-stat__sub">{trendPeakLabel}</span>
+                    </div>
+
+                    <div className="chart-stat">
+                      <span className="chart-stat__label">Active days</span>
+                      <span className="chart-stat__value">
+                        {trendActiveDays} / {TREND_WINDOW}
+                      </span>
+                      <span className="chart-stat__sub">days with spend</span>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter className="card-footer--tight" />
@@ -390,7 +531,7 @@ export const Dashboard = () => {
                 <CardFooter className="card-footer--tight" />
               </Card>
             </section>
-            </>
+              </>
             )}
           </main>
         </div>
